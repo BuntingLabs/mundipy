@@ -1,5 +1,5 @@
 {
-  "name": "Bunting GIS",
+  "name": "mundi.py",
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
@@ -8,7 +8,7 @@
     "baseUrl": "https://api.buntinglabs.com",
     "authentication": { "type": "apiKey" }
   },
-  "favicon": "/favicon.png",
+  "favicon": "/favicon.ico",
   "colors": {
     "primary": "#1B6585",
     "light": "#5498B5",
@@ -18,8 +18,8 @@
   },
   "topbarLinks": [
     {
-      "name": "Contact Sales",
-      "url": "mailto:brendan@buntinglabs.com"
+      "name": "Contact Support",
+      "url": "mailto:support@buntinglabs.com"
     }
   ],
   "topbarCtaButton": {
@@ -42,19 +42,17 @@
   "navigation": [
     {
       "group": "Introduction",
-      "pages": ["get-started", "payment-methods"]
+      "pages": ["install", "quickstart"]
     },
     {
-      "group": "Smart Contracts",
-      "pages": ["multi-contract", "pre-fill"]
-    },
-    {
-      "group": "Platform API",
-      "pages": ["get-projects", "create-project"]
+      "group": "Coordinate Systems",
+      "pages": ["projected-coordinate-systems"]
     }
   ],
   "footerSocials": {
-    "discord": "https://discord.com/invite/b9RR3RCq7X",
-    "twitter": "https://twitter.com/winter_NFTs"
+    "github": "https://github.com/BuntingLabs/mundipy",
+    "website": "https://buntinglabs.com/",
+    "twitter": "https://twitter.com/BuntingLabs",
+    "linkedin": "https://www.linkedin.com/company/bunting-labs/"
   }
 }

@@ -4,3 +4,5 @@
 # data formats
 *.geojson
 *.csv
+
+.DS_Store

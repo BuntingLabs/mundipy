@@ -1,4 +1,4 @@
-# mundi.py
+# ![mundi.py](docs/logo/light.svg)
 
 ## Projected Coordinate Systems
 
