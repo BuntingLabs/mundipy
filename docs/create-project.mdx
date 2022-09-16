@@ -1,0 +1,102 @@
+---
+title: "Create Project"
+description: "Create a project from scratch"
+api: "POST /createProject"
+---
+
+Returns a Winter specific projectId that you can then use for the [front end integration](/front-end-integration/react)
+
+<Param body="email" type="string" required>
+  The email associated with the API key -- this is the email that can log into
+  the later to edit the project.
+</Param>
+
+<Param body="projectName" type="string" required>
+  This will show up on your checkout.
+</Param>
+
+<Param body="brandImageURL" type="string" required>
+  Address to an image or gif that will be presented on your checkout before the
+  user mints an NFT.
+</Param>
+
+<Param body="contractAddress" type="string">
+  The address of the contract on which Winter should call mint. For Solana
+  projects, this is the candyMachine ID.
+</Param>
+
+<Param body="mintFunction" type="string">
+  Name of the mint function Winter should call on the smart contract.
+</Param>
+
+<Param body="contractABI" type="string">
+  The ABI of the contract -- this is nullable for Solana but required for Eth
+  and Polygon projects.
+</Param>
+
+<Param body="tokenSymbol" type="string" required>
+  One of: ETH, MATIC, SOL.
+</Param>
+
+<Param body="mintFunctionParams" type="string" required>
+  One of: `address,amount` `amount,address` `address` `amount`
+</Param>
+
+<Param body="sandbox" type="boolean">
+  True if you want to create a project in sandbox to test with fake payments.
+  False if you want to create a live project! Defaults to false.
+</Param>
+
+<Param body="costPerMint" type="number">
+  Cost per mint in the token (ETH, MATIC, SOL) -- optional if given a contract
+  price function to pull price from.
+</Param>
+
+<Param body="contractPriceFunction" type="string">
+  This is the function on the smart contract that we can call to get the price
+  of the NFT
+</Param>
+
+<Param body="maxNumberOfMints" type="number">
+  The max NFTs that can be purchased in one sale. If this is > 1, you *must*
+  also set allowMultiplePurchases to true.
+</Param>
+
+<Param body="ercType" type="string">
+  Either `1155` or `721`
+</Param>
+
+<Param body="isActive" type="boolean">
+  True for project active (can accept payments), false for project disabled (can
+  not accept payments). When it is turned off/false the widget can still appear,
+  but it will say "Can't mint right now". Note: isActive is default false! You
+  must turn it on!
+</Param>
+
+<Param body="requireAddress" type="boolean">
+  true for the checkout to only show the option to mint to a specific address,
+  false for the checkout to also show the Winter wallet.
+</Param>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://winter-api.usewinter.com/updateProject -u sk_live_abcd=:
+```
+
+```javascript JavaScript
+await axios.post(url,{ auth: { username: 'sk_live_abcd=' }, body: {})
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Response Example
+{
+  "success": true,
+  "project_id": 6736
+}
+```
+
+</ResponseExample>

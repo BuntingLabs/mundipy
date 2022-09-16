@@ -1,0 +1,23 @@
+---
+title: "Multi-contract"
+description: "Winter supports multi-contract mints!"
+---
+
+If you have a "seller" contract that then calls an ERC-721/ERC-1155, we support
+that use case. (As of now, we only support 2 smart contracts. If you have more
+than that, email [dev@usewinter.com](mailto:dev@usewinter.com) and let's chat!).
+
+As a reminder, we require all smart contracts to have a mint function with an
+address parameter! This is so that if a user wants to mint to their own wallet,
+we can do this in one transaction (save on gas fees and a faster mint)!
+
+For example, a "seller" contract would look like:
+
+```javascript
+function purchase(uint256 _amount, address _recipient) external payable {
+    ...
+}
+```
+
+Note that we will expect you to implement standard ERC-721 and ERC-1155
+functions (e.g. tokenURI).

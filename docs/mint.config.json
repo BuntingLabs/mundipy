@@ -1,0 +1,60 @@
+{
+  "name": "Bunting GIS",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "api": {
+    "baseUrl": "https://api.buntinglabs.com",
+    "authentication": { "type": "apiKey" }
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#1B6585",
+    "light": "#5498B5",
+    "dark": "#28404A",
+    "ultraLight": "#D6EDFB",
+    "ultraDark": "#182A32"
+  },
+  "topbarLinks": [
+    {
+      "name": "Contact Sales",
+      "url": "mailto:brendan@buntinglabs.com"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://buntinglabs.com/account/register"
+  },
+  "anchors": [
+    {
+      "name": "Blog",
+      "url": "https://buntinglabs.com/blog",
+      "icon": "newspaper"
+    },
+    {
+      "name": "Contact Us",
+      "url": "mailto:support@buntinglabs.com",
+      "icon": "envelope",
+      "color": "#0284c7"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Introduction",
+      "pages": ["get-started", "payment-methods"]
+    },
+    {
+      "group": "Smart Contracts",
+      "pages": ["multi-contract", "pre-fill"]
+    },
+    {
+      "group": "Platform API",
+      "pages": ["get-projects", "create-project"]
+    }
+  ],
+  "footerSocials": {
+    "discord": "https://discord.com/invite/b9RR3RCq7X",
+    "twitter": "https://twitter.com/winter_NFTs"
+  }
+}
