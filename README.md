@@ -1,5 +1,10 @@
 # ![mundi.py](docs/logo/light.svg)
 
+mundipy is a Python framework for spatial data manipulation. Built on top of
+[geopandas](https://geopandas.org/en/stable/), [GDAL](https://gdal.org/),
+and [shapely](https://shapely.readthedocs.io/en/stable/manual.html), mundi.py
+provides a useful abstraction to eliminate the hassles of spatial data.
+
 ## Projected Coordinate Systems
 
 Automatically suggests a projected coordinate system to use, given a shapely
@@ -22,3 +27,16 @@ This prioritizes coordinate systems that:
     'units': 'feet'
 }
 ```
+
+## Project Roadmap
+
+- No projections needed: automatically chooses and selects a relevant CRS when doing operations
+- Automatic spatial indexing
+- Jupyter notebook native (\_repr\_html\_) that doesn't explode with massive data
+- Nearest neighbor/distance queries
+- Spatial joins
+- Dissolving into h3/s2
+
+## License
+
+Mundi.py is MIT licensed.

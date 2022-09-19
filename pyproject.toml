@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mundipy"
+version = "0.0.1"
+authors = [
+  { name="Brendan Ashworth", email="brendan@buntinglabs.com" },
+]
+description = "mundipy is a Python framework for spatial data manipulation"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: GIS"
+]
+
+[project.urls]
+"Documentation" = "https://docs.mundi.ai/"
+"GitHub" = "https://github.com/BuntingLabs/mundipy"
+"File an Issue" = "https://github.com/BuntingLabs/mundipy/issues"
+"Bunting Labs" = "https://buntinglabs.com/"
