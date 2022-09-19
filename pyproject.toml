@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mundipy"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
   { name="Brendan Ashworth", email="brendan@buntinglabs.com" },
 ]
@@ -28,7 +28,8 @@ dependencies = [
     'pyproj >= 3.3.1, < 4',
     'numpy >= 1.22.3, < 2',
     'pygeos >= 0.13, < 1',
-    'overpy >= 0.6, < 1'
+    'overpy >= 0.6, < 1',
+    'matplotlib >= 3.5.2, <4'
 ]
 
 [project.urls]
