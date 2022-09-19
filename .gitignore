@@ -6,3 +6,5 @@
 *.csv
 
 .DS_Store
+
+dist

@@ -1,5 +1,7 @@
 # ![mundi.py](docs/logo/light.svg)
 
+[![PyPI version](https://badge.fury.io/py/mundipy.svg)](https://pypi.org/project/mundipy/)
+
 mundipy is a Python framework for spatial data manipulation. Built on top of
 [geopandas](https://geopandas.org/en/stable/), [GDAL](https://gdal.org/),
 and [shapely](https://shapely.readthedocs.io/en/stable/manual.html), mundi.py
