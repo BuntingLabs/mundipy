@@ -5,3 +5,5 @@ Shapely==1.8.2
 Fiona==1.8.21
 pyproj==3.3.1
 numpy==1.22.3
+pygeos==0.13
+overpy==0.6
