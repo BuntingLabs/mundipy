@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mundipy"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   { name="Brendan Ashworth", email="brendan@buntinglabs.com" },
 ]
@@ -17,6 +17,18 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: GIS"
+]
+
+dependencies = [
+    'tqdm >= 4.64.0, < 5',
+    'geopandas >= 0.11.1, < 1',
+    'pandas >= 1.4.2, < 2',
+    'Shapely >= 1.8.2, < 2',
+    'Fiona >= 1.8.21, < 2',
+    'pyproj >= 3.3.1, < 4',
+    'numpy >= 1.22.3, < 2',
+    'pygeos >= 0.13, < 1',
+    'overpy >= 0.6, < 1'
 ]
 
 [project.urls]
