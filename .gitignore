@@ -2,8 +2,8 @@
 *.ipynb
 
 # data formats
-*.geojson
 *.csv
+*.geojson
 
 .DS_Store
 
