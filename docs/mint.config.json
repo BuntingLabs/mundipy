@@ -45,6 +45,10 @@
       "pages": ["install", "quickstart"]
     },
     {
+      "group": "Components",
+      "pages": ["map", "layer"]
+    },
+    {
       "group": "Coordinate Systems",
       "pages": ["projected-coordinate-systems"]
     }
