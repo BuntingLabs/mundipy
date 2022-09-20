@@ -1,0 +1,49 @@
+---
+title: "Layer Management"
+description: "Layers are the data currency of mundipy."
+---
+
+Maps are consisted of one or more Layers. Layers contain data, Maps contain
+Layers, and the Mundi object is our view into that data.
+
+## Layer
+
+In mundipy, a layer represents an semantically cohesive set of data. Layers
+can be either vector or raster, and usually represent mixed geometries like
+points and polygons simultaneously.
+
+![mundipy layer management](docs/graphics/layers.svg)
+
+```python layers.py
+import geopandas as gpd
+from mundipy.layer import Layer
+
+gdf = gpd.read_file('us_states.geojson')
+layer = Layer(gdf)
+```
+
+<Tip>The `Layer()` constructor accepts both `geopandas.GeoDataFrame` and `str`, in case you want to pass a filename.</Tip>
+
+## Map
+
+A Map is a list of named spatial datasets, all pertaining to the Earth.
+
+The Map constructor takes a dictionary, where values can be a `str` filename or
+a `geopandas.GeoDataFrame`. The Map will create a Layer from that value.
+
+```python map.py
+import geopandas as gpd
+from mundipy.map import Map
+
+state_map = Map({
+	'us_states': gpd.read_file('us_states.geojson'),
+	'state_capitals': 'state_capitals.kml'
+})
+```
+
+## Mundi
+
+Mundi is the view into the map. Most spatial analysis projects have a *core semantic data type*.
+The Mundi type is recognition of that core type, and orienting spatial analysis around it.
+
+

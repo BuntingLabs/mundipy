@@ -42,11 +42,11 @@
   "navigation": [
     {
       "group": "Introduction",
-      "pages": ["install", "quickstart"]
+      "pages": ["getting-started", "quickstart"]
     },
     {
-      "group": "Components",
-      "pages": ["map", "layer"]
+      "group": "Core Concepts",
+      "pages": ["layer-management"]
     },
     {
       "group": "Coordinate Systems",
