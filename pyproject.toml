@@ -1,39 +1,35 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
+[tool.poetry]
 name = "mundipy"
-version = "0.0.3"
-authors = [
-  { name="Brendan Ashworth", email="brendan@buntinglabs.com" },
-]
-description = "mundipy is a Python framework for spatial data manipulation"
+version = "0.1.0"
+description = "mundipy is a Python framework for spatial data analysis"
+authors = ["Brendan Ashworth <brendan@buntinglabs.com>"]
+license = "MIT"
 readme = "README.md"
-license = { file="LICENSE" }
-requires-python = ">=3.7"
+homepage = "https://buntinglabs.com/"
+repository = "https://github.com/BuntingLabs/mundipy"
+documentation = "https://docs.mundi.ai/"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: GIS"
 ]
+include = ["mundipy/pcs/crs_simple.geojson"]
 
-dependencies = [
-    'tqdm >= 4.64.0, < 5',
-    'geopandas >= 0.11.1, < 1',
-    'pandas >= 1.4.2, < 2',
-    'Shapely >= 1.8.2, < 2',
-    'Fiona >= 1.8.21, < 2',
-    'pyproj >= 3.3.1, < 4',
-    'numpy >= 1.22.3, < 2',
-    'pygeos >= 0.13, < 1',
-    'overpy >= 0.6, < 1',
-    'matplotlib >= 3.5.2, <4'
-]
+[tool.poetry.dependencies]
+python = "^3.10"
+tqdm = "^4.64.1"
+geopandas = "^0.11.1"
+pandas = "^1.5.0"
+Shapely = "^1.8.4"
+Fiona = "^1.8.21"
+pyproj = "^3.4.0"
+numpy = "^1.23.3"
+pygeos = "^0.13"
+overpy = "^0.6"
+matplotlib = "^3.6.0"
 
-[project.urls]
-"Documentation" = "https://docs.mundi.ai/"
-"GitHub" = "https://github.com/BuntingLabs/mundipy"
-"File an Issue" = "https://github.com/BuntingLabs/mundipy/issues"
-"Bunting Labs" = "https://buntinglabs.com/"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
