@@ -3,9 +3,11 @@ title: "Projected Coordinate Systems"
 description: "Choosing a projected coordinate system to calculate distance and area in."
 ---
 
-Geographic coordinate systems (GCS), like WGS84, usually represent points on the Earth as degrees: latitude and longitude. Because the units of geographic coordinate systems are angles and not distance, operations like distance and area have unusable results, without gross approximations.
+[Geographic coordinate systems (GCS)](https://en.wikipedia.org/wiki/Geographic_coordinate_system), like [WGS84](https://en.wikipedia.org/wiki/World_Geodetic_System#1984_version), represent points on the Earth as degrees: latitude and longitude. Because the units of geographic coordinate systems are angles and not distance, the results of operations like distance and area are unusable.
 
-To use distance and area in units of meters or feet, datasets must be converted from a GCS to a projected coordinate system (PCS). There are thousands of PCS's that cover the Earth, of varying units, areas, and distortions.
+To use distance and area in units of meters or feet, spatial data must be converted from a GCS to a [projected coordinate system (PCS)](https://en.wikipedia.org/wiki/Projected_coordinate_system). There are thousands of PCS's that cover the Earth, of varying units, areas, and distortions.
+
+We use the [EPSG Geodetic Parameter Dataset](https://epsg.org/home.html) for selecting a PCS.
 
 ## Choosing a PCS
 
