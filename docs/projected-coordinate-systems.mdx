@@ -1,12 +1,68 @@
 ---
 title: "Projected Coordinate Systems"
-description: "The price is always displayed in USD (since we are a US based business and we operate in USD)"
+description: "Choosing a projected coordinate system to calculate distance and area in."
 ---
 
-However, we support credit cards & payments in any currency! Users will be
-subject to bank foreign exchange fees since their bank will convert to USD to
-send to us (we charge their credit card in USD)
+Geographic coordinate systems (GCS), like WGS84, usually represent points on the Earth as degrees: latitude and longitude. Because the units of geographic coordinate systems are angles and not distance, operations like distance and area have unusable results, without gross approximations.
 
-**Example**: if someone from France sees $20 USD. They put in their French CC,
-their French CC gets charged the equivalent of $20 USD (and whatever other fees
-their bank adds). We get $20 USD
+To use distance and area in units of meters or feet, datasets must be converted from a GCS to a projected coordinate system (PCS). There are thousands of PCS's that cover the Earth, of varying units, areas, and distortions.
+
+## Choosing a PCS
+
+Using the `mundipy.pcs` library, we can choose a reasonable PCS, given any `shapely` geometry with WGS84 coordinates (ordered: longitude, latitude).
+
+```python choose_pcs.py
+from mundipy.pcs import choose_pcs
+from shapely.geometry import Point
+
+choose_pcs(Point(-118.24, 34.052), units='feet')
+# {
+#     'name': 'NAD27 / California zone VII',
+#     'epsg': 26799,
+#     'crs': 'EPSG:26799',
+#     'units': 'feet'
+# }
+```
+
+### Selection Algorithm
+
+Choosing a relevant PCS for a given operation must take into consideration the needs of the application.
+
+The selection algorithm prioritizes the following:
+
+1. The units along both axes must match the given units (either feet or meters)
+2. The area of the PCS must wholly contain the shape
+3. Given the above, the PCS with the smallest area is chosen
+
+PCS with smaller areas likely have lower distortion.
+
+### PCS Suggestions
+
+We can also suggest multiple projections with `suggest_pcs`:
+
+```python suggest_pcs.py
+from mundipy.pcs import suggest_pcs
+from shapely.geometry import Point
+
+suggest_pcs(Point(3.36, 52.54), units='meters', n=2)
+# [{
+#     "name": "ED50 / TM 5 NE",
+#     "epsg": 23095,
+#     "crs": "EPSG:23095",
+#     "units": "meters"
+# },
+# {
+#     "name": "ED50 / UTM zone 31N",
+#     "epsg": 23031,
+#     "crs": "EPSG:23031",
+#     "units": "meters"
+# }]
+```
+
+### Creating a `pyproj.CRS`
+
+To manage your coordinate reference system manually, we recommend using `pyproj`.
+
+```python
+pyproj.CRS('EPSG:23095')
+```

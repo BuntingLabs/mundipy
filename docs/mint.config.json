@@ -28,9 +28,16 @@
   },
   "anchors": [
     {
+      "name": "r/mundipy",
+      "url": "https://reddit.com/r/mundipy",
+      "icon": "reddit",
+      "color": "#FF4301"
+    },
+    {
       "name": "Blog",
       "url": "https://buntinglabs.com/blog",
-      "icon": "newspaper"
+      "icon": "newspaper",
+      "color": "#1fd655"
     },
     {
       "name": "Contact Us",
