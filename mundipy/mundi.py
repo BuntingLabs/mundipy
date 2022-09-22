@@ -18,14 +18,19 @@ from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs
 
 class MundiQ:
-    def __init__(self, center, mapdata, plot_target=None, pcs=None, clip_distance=500):
+    def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
+        self.pcs = choose_pcs(box(*center.geometry.bounds), units=units)['crs']
+
         # a row in a GeoDataFrame, with a column called .geometry
         # in local projected coordinate system
         self.center = center
+
+        reproject = pyproj.Transformer.from_crs(pyproj.CRS('EPSG:4326'),
+            pyproj.CRS(self.pcs), always_xy=True).transform
+        self.center.geometry = transform(reproject, self.center.geometry)
+
         # GeoPool
         self.mapdata = mapdata
-
-        self.pcs = pcs
 
         # could be matplotlib axes or 'geojson'
         self.plot_target = plot_target
@@ -129,8 +134,7 @@ class Mundi:
 
         if units not in ['meters', 'feet']:
             raise TypeError('units passed to Mundi() was neither meters nor feet')
-
-        self.pcs = choose_pcs(box(*self.main.dataframe.geometry.total_bounds), units=units)['crs']
+        self.units = units
 
     def plot(self, fn, clip_distance=500, output_type='matplotlib'):
         if output_type == 'geojson':
@@ -140,14 +144,12 @@ class Mundi:
 
         # TODO: drop duplicates, except it's very slow
         #.drop_duplicates(subset=['geometry'])
-        df = self.main.dataframe.to_crs(crs=self.pcs)
-
-        Q = MundiQ(df.iloc[1], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), pcs=self.pcs, clip_distance=clip_distance)
+        Q = MundiQ(self.main.dataframe.iloc[1], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units, clip_distance=clip_distance)
         res = fn(Q)
 
         if output_type == 'geojson':
             # convert to dfs
-            dfs = gpd.GeoDataFrame(data=Q.plot_contents, crs=self.pcs, columns=['geometry', 'fill'], geometry='geometry').to_crs(epsg=4326)
+            dfs = gpd.GeoDataFrame(data=Q.plot_contents, crs='EPSG:4326', columns=['geometry', 'fill'], geometry='geometry')
 
             # 'http://geojson.io/#data=data:application/json,%s' % urllib.parse.quote(
             return dfs.to_json()
@@ -157,7 +159,7 @@ class Mundi:
 
     def q(self, fn, progressbar=False):
         # make iterator unique by geometry
-        unique_iterator = self.main.dataframe.drop_duplicates(subset=['geometry']).to_crs(crs=self.pcs)
+        unique_iterator = self.main.dataframe.drop_duplicates(subset=['geometry'])
 
         res_keys = None
         res_outs = dict()
@@ -167,7 +169,7 @@ class Mundi:
             finiter = tqdm(finiter, total=len(unique_iterator))
 
         for window in finiter:
-            Q = MundiQ(window, self.mapdata, pcs=self.pcs)
+            Q = MundiQ(window, self.mapdata)
             res = fn(Q)
 
             # coerce to tuple
@@ -187,4 +189,4 @@ class Mundi:
                 res_outs[key].append(val)
             res_outs['geometry'].append(window.geometry)
 
-        return gpd.GeoDataFrame(res_outs, crs=self.pcs, geometry='geometry').to_crs(crs='EPSG:4326')
+        return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry='geometry').to_crs(crs='EPSG:4326')
