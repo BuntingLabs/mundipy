@@ -1,5 +1,6 @@
 import json
 import urllib.parse
+from functools import lru_cache
 
 from tqdm import tqdm
 import geopandas as gpd
@@ -17,6 +18,12 @@ from mundipy.layer import Layer, VisibleLayer
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs
 
+@lru_cache(maxsize=64)
+def pyproj_transform(from_crs, to_crs):
+    """ Returns a pyproj transform() function between two CRS, in 'EPSG:xxxx' format."""
+    return pyproj.Transformer.from_crs(pyproj.CRS(from_crs),
+        pyproj.CRS(to_crs), always_xy=True).transform
+
 class MundiQ:
     def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
         self.pcs = choose_pcs(box(*center.geometry.bounds), units=units)['crs']
@@ -25,9 +32,8 @@ class MundiQ:
         # in local projected coordinate system
         self.center = center
 
-        reproject = pyproj.Transformer.from_crs(pyproj.CRS('EPSG:4326'),
-            pyproj.CRS(self.pcs), always_xy=True).transform
-        self.center.geometry = transform(reproject, self.center.geometry)
+        to_local = pyproj_transform('EPSG:4326', self.pcs)
+        self.center.geometry = transform(to_local, self.center.geometry)
 
         # GeoPool
         self.mapdata = mapdata
@@ -76,9 +82,8 @@ class MundiQ:
     def bbox(self, distance=500):
         """Builds a bounding box around the center object in WGS84."""
 
-        reproject = pyproj.Transformer.from_crs(pyproj.CRS(self.pcs),
-            pyproj.CRS('EPSG:4326'), always_xy=True).transform
-        return transform(reproject, self._bbox(distance=distance)).bounds
+        to_wgs = pyproj_transform('EPSG:4326', self.pcs)
+        return transform(to_wgs, self._bbox(distance=distance)).bounds
 
     def plot(self, shape, name):
         if self.plot_target is None:
