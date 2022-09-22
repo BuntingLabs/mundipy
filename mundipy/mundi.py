@@ -167,11 +167,11 @@ class Mundi:
         res_keys = None
         res_outs = dict()
         # progressbar optional
-        finiter = list(unique_iterator.itertuples())[:20]
+        finiter = list(unique_iterator.iterrows())
         if progressbar:
             finiter = tqdm(finiter, total=len(unique_iterator))
 
-        for window in finiter:
+        for idx, window in finiter:
             Q = MundiQ(window, self.mapdata)
             res = fn(Q)
 
