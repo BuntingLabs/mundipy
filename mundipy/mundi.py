@@ -172,6 +172,9 @@ class Mundi:
             finiter = tqdm(finiter, total=len(unique_iterator))
 
         for idx, window in finiter:
+            # fn(Q) can edit window
+            original_shape = window.geometry
+
             Q = MundiQ(window, self.mapdata)
             res = fn(Q)
 
@@ -190,6 +193,6 @@ class Mundi:
 
             for key, val in res.items():
                 res_outs[key].append(val)
-            res_outs['geometry'].append(window.geometry)
+            res_outs['geometry'].append(original_shape)
 
-        return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry='geometry').to_crs(crs='EPSG:4326')
+        return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry='geometry')
