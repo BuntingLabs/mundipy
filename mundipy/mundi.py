@@ -115,7 +115,9 @@ class MundiQ:
             self.plot_handles.append(mpatches.Patch(color=color, label=name))
 
         if self.plot_target == 'geojson':
-            self.plot_contents.append((shape, mcolors.CSS4_COLORS[color]))
+            # plot_contents can only contain shapely geometries
+            for idx, row in shape.items():
+                self.plot_contents.append((row, mcolors.CSS4_COLORS[color]))
         else:
             shape.plot(ax=self.plot_target, edgecolor='black', facecolor=color, aspect='equal', alpha=0.75)
 
@@ -136,19 +138,19 @@ class Mundi:
         elif output_type == 'matplotlib':
             fig, ax = plt.subplots()
 
-        df = self.main.dataframe.drop_duplicates(subset=['geometry']).to_crs(crs=self.pcs)
+        # TODO: drop duplicates, except it's very slow
+        #.drop_duplicates(subset=['geometry'])
+        df = self.main.dataframe.to_crs(crs=self.pcs)
 
         Q = MundiQ(df.iloc[1], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), pcs=self.pcs, clip_distance=clip_distance)
         res = fn(Q)
 
         if output_type == 'geojson':
             # convert to dfs
-            dfs = list(map(lambda shp: gpd.GeoDataFrame(data={ 'geometry': shp[0] }, crs=self.pcs).to_crs(epsg=4326), Q.plot_contents))
-            for i, df in enumerate(dfs):
-                df['fill'] = Q.plot_contents[i][1]
+            dfs = gpd.GeoDataFrame(data=Q.plot_contents, crs=self.pcs, columns=['geometry', 'fill'], geometry='geometry').to_crs(epsg=4326)
 
             # 'http://geojson.io/#data=data:application/json,%s' % urllib.parse.quote(
-            return gpd.GeoDataFrame(data=pd.concat(dfs)).to_json()
+            return dfs.to_json()
         elif output_type == 'matplotlib':
             ax.legend(handles=Q.plot_handles, loc='upper right')
             plt.show()
