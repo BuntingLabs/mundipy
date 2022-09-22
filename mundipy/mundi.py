@@ -81,8 +81,7 @@ class MundiQ:
 
     def bbox(self, distance=500):
         """Builds a bounding box around the center object in WGS84."""
-
-        to_wgs = pyproj_transform('EPSG:4326', self.pcs)
+        to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
         return transform(to_wgs, self._bbox(distance=distance)).bounds
 
     def plot(self, shape, name):
