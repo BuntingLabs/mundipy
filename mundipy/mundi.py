@@ -110,6 +110,9 @@ class MundiQ:
         # LineString and Point won't show up when plotted; buffer
         shape = shape.apply(lambda g: g.buffer(2) if isinstance(g, LineString) or isinstance(g, Point) else g)
 
+        # convert to WGS84
+        shape = shape.set_crs(crs=self.pcs).to_crs(epsg=4326)
+
         # check color
         if name in self.plot_legend.keys():
             color = self.plot_legend[name]
