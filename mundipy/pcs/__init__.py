@@ -16,7 +16,7 @@ from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 import fiona
 
-CRS_DATASET = os.path.join(os.path.dirname(__file__), 'crs_simple.geojson')
+CRS_DATASET = os.path.join(os.path.dirname(__file__), 'crs_simple.fgb')
 
 def choose_pcs(box, units='meters'):
 	"""Choose a projected coordinate system from a shapely geometry with specified units for the axes."""
