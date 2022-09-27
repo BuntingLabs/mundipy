@@ -23,7 +23,7 @@ is a list of the one Michelin star restaurants in the world.
 The [data files for this can be found here](https://gist.github.com/brendanashworth/9e9d17192ffaca8db272e1b70b7ee3bd).
 
 <Frame>
-  <img src="docs/graphics/ny_datasets.png" alt="michelin star restaurants in new york city" title="michelin star restaurants in new york city" />
+  <img src="graphics/ny_datasets.png" alt="michelin star restaurants in new york city" title="michelin star restaurants in new york city" />
 </Frame>
 
 ### Load onto a Map
@@ -99,6 +99,7 @@ We get a `pandas.DataFrame` consisting of the resulting output:
   <thead>
     <tr style={{"textAlign": "right"}}>
       <th></th>
+      <th>name</th>
       <th>borough</th>
       <th>geometry</th>
     </tr>
@@ -106,16 +107,19 @@ We get a `pandas.DataFrame` consisting of the resulting output:
   <tbody>
     <tr>
       <th>0</th>
+      <td>Del Posto</td>
       <td>Manhattan</td>
       <td>POINT (-74.00770 40.74327)</td>
     </tr>
     <tr>
       <th>1</th>
+      <td>Le Grill de Joël Robuchon</td>
       <td>Manhattan</td>
       <td>POINT (-74.00770 40.74290)</td>
     </tr>
     <tr>
       <th>2</th>
+      <td>L'Appart</td>
       <td>Manhattan</td>
       <td>POINT (-74.01544 40.71190)</td>
     </tr>
@@ -123,11 +127,13 @@ We get a `pandas.DataFrame` consisting of the resulting output:
       <th>...</th>
       <td>...</td>
       <td>...</td>
+      <td>...</td>
     </tr>
     <tr>
-      <th>54</th>
-      <td>Brooklyn</td>
-      <td>POINT (-73.92303 40.70758)</td>
+      <th>4</th>
+      <td>Wallsé</td>
+      <td>Manhattan</td>
+      <td>POINT (-74.00814 40.73538)</td>
     </tr>
   </tbody>
 </table>
