@@ -164,7 +164,7 @@ class Mundi:
             ax.legend(handles=Q.plot_handles, loc='upper right')
             plt.show()
 
-    def q(self, fn, progressbar=False):
+    def q(self, fn, progressbar=False, n=0):
         # make iterator unique by geometry
         unique_iterator = self.main.dataframe.drop_duplicates(subset=['geometry'])
 
@@ -202,5 +202,9 @@ class Mundi:
             for key, val in res.items():
                 res_outs[key].append(val)
             res_outs['geometry'].append(original_shape)
+
+            # check n
+            if n > 0 and len(res_outs['geometry']) == n:
+                break
 
         return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry='geometry')
