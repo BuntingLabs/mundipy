@@ -182,9 +182,13 @@ class Mundi:
             Q = MundiQ(window, self.mapdata)
             res = fn(Q)
 
+            # if res is None, skip
+            if res is None:
+                continue
+
             # coerce to tuple
             if not isinstance(res, dict):
-                raise TypeError('function passed to mundi.q() must return dict but instead got %s' % type(res).__name__)
+                raise TypeError('function passed to mundi.q() must return dict or None but instead got %s' % type(res).__name__)
 
             if res_keys is None:
                 res_keys = res.keys()
