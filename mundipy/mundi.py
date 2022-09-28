@@ -143,15 +143,18 @@ class Mundi:
             raise TypeError('units passed to Mundi() was neither meters nor feet')
         self.units = units
 
-    def plot(self, fn, clip_distance=500, output_type='matplotlib'):
+    def plot(self, fn, element_index=0, clip_distance=500, output_type='matplotlib'):
         if output_type == 'geojson':
             pass
         elif output_type == 'matplotlib':
             fig, ax = plt.subplots()
 
+        if element_index < 0 or element_index > len(self.main.dataframe):
+            raise TypeError('element_index passed to plot() that was < 0 or > length of dataset')
+
         # TODO: drop duplicates, except it's very slow
         #.drop_duplicates(subset=['geometry'])
-        Q = MundiQ(self.main.dataframe.iloc[1], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units, clip_distance=clip_distance)
+        Q = MundiQ(self.main.dataframe.iloc[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units, clip_distance=clip_distance)
         res = fn(Q)
 
         if output_type == 'geojson':
