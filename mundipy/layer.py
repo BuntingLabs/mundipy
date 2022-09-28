@@ -101,40 +101,6 @@ class Layer:
 		return self._load(bbox=bbox)
 
 
-
-def s2gen(max_lat, min_lat, max_lng, min_lng, s2_lvl):
-    point_nw = LatLng.from_degrees(max_lat, min_lng)
-    point_se = LatLng.from_degrees(min_lat, max_lng)
-
-    rc = RegionCoverer()
-    rc.min_level = s2_lvl
-    rc.max_level = s2_lvl
-    rc.max_cells = 1000000
-
-    cellids = rc.get_covering(LatLngRect.from_point_pair(point_nw, point_se))
-
-    kml = (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">\n'
-        '<Document><name>{0}</name>\n'
-        '<Style id="s2_poly_style"><LineStyle><color>ff0000ff</color><width>2</width></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>\n'
-        '<Folder><name>{0}</name><open>1</open>'
-    ).format('S2 cells level ' + str(s2_lvl))
-    for cid in cellids:
-        vertices = [LatLng.from_point(Cell(cid).get_vertex(v)) for v in range(4)]
-        kml_coords = ['{},0'.format(swap_latlong(str(v).split()[-1])) for v in vertices]
-        kml += (
-            '<Placemark><name>{}</name><styleUrl>#s2_poly_style</styleUrl><Polygon><tessellate>1</tessellate><outerBoundaryIs><LinearRing>'
-            '<coordinates>{} {}</coordinates>'
-            '</LinearRing></outerBoundaryIs></Polygon></Placemark>'
-        ).format(cid.id(), ' '.join(kml_coords), kml_coords[0])
-    kml += (
-        '</Folder></Document>\n'
-        '</kml>'
-    )
-
-    return kml
-
 """VisibleLayer represents Layer data, as seen from a geometry."""
 class VisibleLayer:
 	# Center needs to be projected to the local CRS already
