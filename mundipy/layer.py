@@ -37,6 +37,16 @@ class Layer:
 			# load from PostGIS
 			self._conn = create_engine(self._db_url)
 
+			# no bbox
+			if bbox is None:
+				# build the query
+				query = "SELECT * FROM %s" % self._db_table
+
+				# assume it's WGS84
+				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
+				self._conn = None
+				return gdf
+
 			# tile the area
 			r = s2sphere.RegionCoverer()
 			# cell level 20 = typical edge length of 7-10m or 30ft
@@ -54,14 +64,6 @@ class Layer:
 			self._conn = None
 
 			return together_geo
-
-			# build the query
-			query = "SELECT * FROM %s" % self._db_table
-			if bbox is not None:
-				query = "SELECT * FROM %s WHERE geometry && ST_MakeEnvelope(%f, %f, %f, %f, 4326)" % ((self._db_table,) + bbox)
-
-			# assume it's WGS84
-			return gpd.GeoDataFrame.from_postgis(query, con, geom_col='geometry', crs='EPSG:4326')
 
 		if bbox is None:
 			return gpd.read_file(self.filename)
