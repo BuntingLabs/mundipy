@@ -169,7 +169,8 @@ class Mundi:
 
     def q(self, fn, progressbar=False, n=0):
         # make iterator unique by geometry
-        unique_iterator = self.main.dataframe.drop_duplicates(subset=['geometry'])
+        # TODO: drop duplicates, except it's very slow
+        unique_iterator = self.main.dataframe
 
         res_keys = None
         res_outs = dict()
