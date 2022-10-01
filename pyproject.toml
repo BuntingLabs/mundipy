@@ -18,7 +18,7 @@ include = ["mundipy/pcs/crs_simple.geojson"]
 exclude = ["example.py"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 tqdm = "^4.64.1"
 geopandas = "^0.11.1"
 pandas = "^1.5.0"
