@@ -16,8 +16,11 @@ from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 import fiona
 
+from mundipy.cache import spatial_cache_footprint
+
 CRS_DATASET = os.path.join(os.path.dirname(__file__), 'crs_enhanced.fgb')
 
+@spatial_cache_footprint
 def choose_pcs(box, units='meters'):
 	"""Choose a projected coordinate system from a shapely geometry with specified units for the axes."""
 
@@ -26,11 +29,24 @@ def choose_pcs(box, units='meters'):
 	if units not in ['feet', 'meters']:
 		raise TypeError('units passed to projectedcrs.choose_pcs() is neither feet nor meters')
 
-	suggestions = suggest_pcs(box, units=units, n=1)
-	if len(suggestions) == 0:
-		raise ValueError('choose_pcs(box) had zero suggested CRS (hint: is your box in WGS84 format?)')
+	with fiona.open(CRS_DATASET, 'r') as epsg:
+		intersects_box = epsg.values(bbox=box.bounds)
 
-	return suggestions[0]
+		# filter for proprety
+		has_unit = filter(lambda geo: geo['geometry'] is not None and geo['properties']['axis_unit'] == units, intersects_box)
+
+		# sort by area
+		by_area = sorted(has_unit, key=lambda geo: geo['properties']['area'])
+
+		# incrementally make list of suggestions, adding if contains
+		suggestions = []
+
+		for potential_pcs in by_area:
+			geo = shape(potential_pcs['geometry']).buffer(0)
+			if not geo.contains(box):
+				continue
+
+			return (transform_epsg(potential_pcs), geo)
 
 def suggest_pcs(box, units='meters', n=3):
 	"""Suggest multiple projected coordinate systems from a shapely geometry with specified units for the axes."""
