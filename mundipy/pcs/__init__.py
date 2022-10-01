@@ -16,7 +16,7 @@ from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 import fiona
 
-CRS_DATASET = os.path.join(os.path.dirname(__file__), 'crs_simple.fgb')
+CRS_DATASET = os.path.join(os.path.dirname(__file__), 'crs_enhanced.fgb')
 
 def choose_pcs(box, units='meters'):
 	"""Choose a projected coordinate system from a shapely geometry with specified units for the axes."""
@@ -26,7 +26,7 @@ def choose_pcs(box, units='meters'):
 	if units not in ['feet', 'meters']:
 		raise TypeError('units passed to projectedcrs.choose_pcs() is neither feet nor meters')
 
-	suggestions = suggest_pcs(box, units=units)
+	suggestions = suggest_pcs(box, units=units, n=1)
 	if len(suggestions) == 0:
 		raise ValueError('choose_pcs(box) had zero suggested CRS (hint: is your box in WGS84 format?)')
 
@@ -41,18 +41,27 @@ def suggest_pcs(box, units='meters', n=3):
 		raise TypeError('units passed to projectedcrs.suggest_pcs() is neither feet nor meters')
 
 	with fiona.open(CRS_DATASET, 'r') as epsg:
-		intersects_box = [geo for i, geo in epsg.items(bbox=box.bounds) if geo['geometry'] is not None]
+		intersects_box = epsg.values(bbox=box.bounds)
 
 		# filter for proprety
-		has_unit = filter(lambda geo: geo['properties']['axis_unit'] == units, intersects_box)
-
-		# filter for where items contain box
-		contains_box = filter(lambda geo: shape(geo['geometry']).buffer(0).contains(box), has_unit)
+		has_unit = filter(lambda geo: geo['geometry'] is not None and geo['properties']['axis_unit'] == units, intersects_box)
 
 		# sort by area
-		satisfactory = list(map(transform_epsg, sorted(contains_box, key=lambda geo: shape(geo['geometry']).area)))
+		by_area = sorted(has_unit, key=lambda geo: geo['properties']['area'])
 
-		return satisfactory[:n]
+		# incrementally make list of suggestions, adding if contains
+		suggestions = []
+
+		for potential_pcs in by_area:
+			if not shape(potential_pcs['geometry']).buffer(0).contains(box):
+				continue
+
+			suggestions.append(potential_pcs)
+
+			if len(suggestions) >= n:
+				break
+
+		return list(map(transform_epsg, suggestions))
 
 def transform_epsg(geojson):
 	return {
