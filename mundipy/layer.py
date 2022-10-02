@@ -1,13 +1,10 @@
 from shapely.geometry.base import BaseGeometry
-from shapely.ops import transform
 import shapely.wkt
 import geopandas as gpd
 import pandas as pd
 from sqlalchemy import create_engine
 from functools import lru_cache, partial
 import s2sphere
-
-from mundipy.cache import pyproj_transform
 
 """A Layer represents a group of spatial data."""
 class Layer:
@@ -31,7 +28,7 @@ class Layer:
 		else:
 			raise TypeError('data for Layer() is not filename, GeoDataFrame or dict with PostgreSQL details')
 
-	def _load(self, bbox=None):
+	def _load(self, bbox=None, pcs='EPSG:4326'):
 		"""Load part or the entire Layer as a dataframe."""
 		if self._dataframe is not None:
 			return self._dataframe
@@ -43,10 +40,9 @@ class Layer:
 			# no bbox
 			if bbox is None:
 				# build the query
-				query = "SELECT * FROM %s" % self._db_table
+				query = "SELECT *, ST_Transform(geometry, '%s') AS local_geom FROM %s" % (pcs, self._db_table)
 
-				# assume it's WGS84
-				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
+				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='local_geom', crs=pcs)
 				self._conn = None
 				return gdf
 
@@ -60,9 +56,9 @@ class Layer:
 
 			cell_ids = r.get_covering(s2sphere.LatLngRect.from_point_pair(p1, p2))
 
-			tiles = [self._load_tile(cellid) for cellid in cell_ids]
+			tiles = [self._load_tile(cellid, pcs) for cellid in cell_ids]
 			together = pd.concat(tiles)
-			together_geo = gpd.GeoDataFrame(data=together, geometry='geometry', crs='EPSG:4326')
+			together_geo = gpd.GeoDataFrame(data=together, geometry='geometry', crs=pcs)
 
 			self._conn = None
 
@@ -74,7 +70,7 @@ class Layer:
 			return gpd.read_file(self.filename, bbox=bbox)
 
 	@lru_cache(maxsize=512)
-	def _load_tile(self, cellid):
+	def _load_tile(self, cellid, pcs):
 		vertices = [s2sphere.LatLng.from_point(s2sphere.Cell(cellid).get_vertex(v)) for v in range(4)]
 
 		wkt = "POLYGON ((%f %f, %f %f, %f %f, %f %f, %f %f))" % (
@@ -86,22 +82,21 @@ class Layer:
 		)
 		# shapely.wkt.loads(wkt)
 
-		# assume it's WGS84
-		query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, wkt)
+		query = "SELECT *, ST_Transform(geometry, '%s') AS local_geom FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (pcs, self._db_table, wkt)
 
-		return gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
+		return gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='local_geom', crs=pcs)
 
 	@property
-	def dataframe(self):
+	def dataframe(self, pcs='EPSG:4326'):
 		"""Load an entire Layer as a dataframe."""
-		return self._load()
+		return self._load(pcs=pcs)
 
 	"""Read into a Layer at a specific geometry (WGS84)."""
-	def inside_bbox(self, bbox):
+	def inside_bbox(self, bbox, pcs='EPSG:4326'):
 		if not isinstance(bbox, tuple) or len(bbox) != 4:
 			raise TypeError('inside_bbox expected bbox to be a 4-tuple')
 
-		return self._load(bbox=bbox)
+		return self._load(bbox=bbox, pcs=pcs)
 
 
 """VisibleLayer represents Layer data, as seen from a geometry."""
@@ -116,12 +111,8 @@ class VisibleLayer:
 
 		if not isinstance(layer, Layer):
 			raise TypeError('mapdata passed to VisibleLayer() was not a mundipy.Map')
-		df = layer.inside_bbox(bbox)
-		# convert to local PCS with cached transform
-		df.set_geometry(df.geometry.apply(partial(transform, pyproj_transform('EPSG:4326', pcs))),
-			inplace=True, crs=pcs)
-
-		self.local_collection = df
+		# results come as projected coordinate system
+		self.local_collection = layer.inside_bbox(bbox, pcs=pcs)
 
 		if not isinstance(center, BaseGeometry):
 			raise TypeError('center passed to VisibleLayer was not shapely.geometry.BaseGeometry')
