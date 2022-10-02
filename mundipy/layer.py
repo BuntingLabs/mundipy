@@ -40,18 +40,16 @@ class Layer:
 			# no bbox
 			if bbox is None:
 				# build the query
-				query = "SELECT *, ST_Transform(geometry, '%s') AS local_geom FROM %s" % (pcs, self._db_table)
+				query = "SELECT * FROM %s" % self._db_table
 
-				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='local_geom', crs=pcs)
-				gdf.rename(columns={ 'geometry': 'wgs84_geom', 'local_geom': 'geometry' }, inplace=True)
-				gdf.set_geometry('geometry', inplace=True)
+				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
 				self._conn = None
-				return gdf
+				return gdf.to_crs(pcs)
 
 			# tile the area
 			r = s2sphere.RegionCoverer()
 			# cell level 20 = typical edge length of 7-10m or 30ft
-			r.max_level = 20
+			r.max_level = 16
 
 			p1 = s2sphere.LatLng.from_degrees(bbox[3], bbox[0])
 			p2 = s2sphere.LatLng.from_degrees(bbox[1], bbox[2])
@@ -84,17 +82,15 @@ class Layer:
 		)
 		# shapely.wkt.loads(wkt)
 
-		query = "SELECT *, ST_Transform(geometry, '%s') AS local_geom FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (pcs, self._db_table, wkt)
+		query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, wkt)
 
-		gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='local_geom', crs=pcs)
-		gdf.rename(columns={ 'geometry': 'wgs84_geom', 'local_geom': 'geometry' }, inplace=True)
-		gdf.set_geometry('geometry', inplace=True)
-		return gdf
+		gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
+		return gdf.to_crs(pcs)
 
 	@property
-	def dataframe(self, pcs='EPSG:4326'):
+	def dataframe(self):
 		"""Load an entire Layer as a dataframe."""
-		return self._load(pcs=pcs)
+		return self._load()
 
 	"""Read into a Layer at a specific geometry (WGS84)."""
 	def inside_bbox(self, bbox, pcs='EPSG:4326'):
