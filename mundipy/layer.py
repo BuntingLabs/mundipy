@@ -43,7 +43,8 @@ class Layer:
 				query = "SELECT *, ST_Transform(geometry, '%s') AS local_geom FROM %s" % (pcs, self._db_table)
 
 				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='local_geom', crs=pcs)
-				gdf.set_geometry('local_geom', inplace=True)
+				gdf.rename(columns={ 'geometry': 'wgs84_geom', 'local_geom': 'geometry' }, inplace=True)
+				gdf.set_geometry('geometry', inplace=True)
 				self._conn = None
 				return gdf
 
@@ -86,7 +87,8 @@ class Layer:
 		query = "SELECT *, ST_Transform(geometry, '%s') AS local_geom FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (pcs, self._db_table, wkt)
 
 		gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='local_geom', crs=pcs)
-		gdf.set_geometry('local_geom', inplace=True)
+		gdf.rename(columns={ 'geometry': 'wgs84_geom', 'local_geom': 'geometry' }, inplace=True)
+		gdf.set_geometry('geometry', inplace=True)
 		return gdf
 
 	@property
