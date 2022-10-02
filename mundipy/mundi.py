@@ -1,6 +1,5 @@
 import json
 import urllib.parse
-from functools import lru_cache
 
 from tqdm import tqdm
 import geopandas as gpd
@@ -8,7 +7,6 @@ import pandas as pd
 from shapely.ops import transform
 from shapely.geometry import Polygon, LineString, Point, box
 from shapely.geometry.base import BaseGeometry
-import pyproj
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
@@ -17,12 +15,7 @@ from mundipy.map import Map
 from mundipy.layer import Layer, VisibleLayer
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs
-
-@lru_cache(maxsize=64)
-def pyproj_transform(from_crs, to_crs):
-    """ Returns a pyproj transform() function between two CRS, in 'EPSG:xxxx' format."""
-    return pyproj.Transformer.from_crs(pyproj.CRS(from_crs),
-        pyproj.CRS(to_crs), always_xy=True).transform
+from mundipy.cache import pyproj_transform
 
 class MundiQ:
     def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
@@ -177,7 +170,7 @@ class Mundi:
         # progressbar optional
         finiter = list(unique_iterator.iterrows())
         if progressbar:
-            finiter = tqdm(finiter, total=len(unique_iterator))
+            finiter = tqdm(finiter, total=min(n, len(unique_iterator)))
 
         for idx, window in finiter:
             # fn(Q) can edit window

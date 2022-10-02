@@ -1,10 +1,13 @@
 from shapely.geometry.base import BaseGeometry
+from shapely.ops import transform
 import shapely.wkt
 import geopandas as gpd
 import pandas as pd
 from sqlalchemy import create_engine
-from functools import lru_cache
+from functools import lru_cache, partial
 import s2sphere
+
+from mundipy.cache import pyproj_transform
 
 """A Layer represents a group of spatial data."""
 class Layer:
@@ -113,7 +116,12 @@ class VisibleLayer:
 
 		if not isinstance(layer, Layer):
 			raise TypeError('mapdata passed to VisibleLayer() was not a mundipy.Map')
-		self.local_collection = layer.inside_bbox(bbox).to_crs(crs=pcs)
+		df = layer.inside_bbox(bbox)
+		# convert to local PCS with cached transform
+		df.set_geometry(df.geometry.apply(partial(transform, pyproj_transform('EPSG:4326', pcs))),
+			inplace=True, crs=pcs)
+
+		self.local_collection = df
 
 		if not isinstance(center, BaseGeometry):
 			raise TypeError('center passed to VisibleLayer was not shapely.geometry.BaseGeometry')
