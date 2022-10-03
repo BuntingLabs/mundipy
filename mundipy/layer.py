@@ -1,5 +1,5 @@
 from shapely.geometry.base import BaseGeometry
-from shapely.geometry import box, Point, MultiPolygon
+from shapely.geometry import box, Point, Polygon, MultiPolygon
 import shapely.wkt
 import geopandas as gpd
 import pandas as pd
@@ -63,7 +63,7 @@ class Layer:
 				self._conn = None
 				return (gdf.to_crs(pcs), None)
 
-			cell_ids = tile_bbox(bbox)
+			cell_ids = list(tile_bbox(bbox))
 
 			tiles = [self._load_tile(cellid, pcs) for cellid in cell_ids]
 			together = pd.concat(tiles)
@@ -72,10 +72,11 @@ class Layer:
 			self._conn = None
 
 			# build footprint from cell_ids
-			polygons = [[s2sphere.LatLng.from_point(s2sphere.Cell(cellid).get_vertex(v)) for v in range(4)] for cellid in cell_ids]
-			polygons = [[Point(v.lng(), v.lat()) for v in polygon] for polygon in polygons]
+			# needs 5 points to have a box polygon
+			polygons = [[s2sphere.LatLng.from_point(s2sphere.Cell(cellid).get_vertex(v)) for v in [0, 1, 2, 3, 0]] for cellid in cell_ids]
+			polygons = [Polygon([Point(v.lng().degrees, v.lat().degrees) for v in polygon]) for polygon in polygons]
 
-			return (together_geo, MultiPolygon(polygons))
+			return (together_geo, MultiPolygon(polygons).buffer(0))
 
 		if bbox is None:
 			return (gpd.read_file(self.filename), None)
