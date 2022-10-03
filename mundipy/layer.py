@@ -46,7 +46,14 @@ class Layer:
 
 	@spatial_cache_footprint
 	def _load(self, bbox, pcs='EPSG:4326'):
-		"""Load part or the entire Layer as a dataframe."""
+		"""
+		Load part or the entire Layer as a dataframe.
+
+		Takes bbox as a 4-tuple of WGS84 coordinates (lon, lat). bbox can be
+		None to load the entire dataset.
+
+		Returns the dataset in PCS coordinates.
+		"""
 		if self._dataframe is not None:
 			return (self._dataframe, None)
 
@@ -135,11 +142,14 @@ class VisibleLayer:
 
 	def intersects(self):
 		"""Give a list of members that intersect with the center geometry."""
-		spatial_index = self.local_collection.sindex
-		possible_matches_index = list(spatial_index.intersection(self.center.bounds))
-		possible_matches = self.local_collection.iloc[possible_matches_index]
+		possible_matches_index = list(self.local_collection.sindex.intersection(self.center.bounds))
 
-		return possible_matches[possible_matches.intersects(self.center)]
+		# indexing into dataframes is expensive, compute a new list of actual matches
+		# .iloc only takes integer locations, even for columns
+		geometry_col_loc = self.local_collection.columns.get_loc('geometry')
+		actual_matches_index = [match for match in possible_matches_index if self.local_collection.iloc[match, geometry_col_loc].intersects(self.center)]
+
+		return self.local_collection.iloc[actual_matches_index]
 
 	def nearest(self):
 		"""Give the closest member to the center geometry."""
