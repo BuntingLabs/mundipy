@@ -1,4 +1,5 @@
 from shapely.geometry.base import BaseGeometry
+from shapely.geometry import box, Point, MultiPolygon
 import shapely.wkt
 import geopandas as gpd
 import pandas as pd
@@ -6,9 +7,13 @@ from sqlalchemy import create_engine
 from functools import lru_cache, partial
 import s2sphere
 
+from mundipy.cache import spatial_cache_footprint
+
 r = s2sphere.RegionCoverer()
 
-def tile_bbox(bbox):
+def tile_bbox(polygon):
+	bbox = polygon.bounds
+
 	p1 = s2sphere.LatLng.from_degrees(bbox[3], bbox[0])
 	p2 = s2sphere.LatLng.from_degrees(bbox[1], bbox[2])
 
@@ -39,10 +44,11 @@ class Layer:
 		else:
 			raise TypeError('data for Layer() is not filename, GeoDataFrame or dict with PostgreSQL details')
 
-	def _load(self, bbox=None, pcs='EPSG:4326'):
+	@spatial_cache_footprint
+	def _load(self, bbox, pcs='EPSG:4326'):
 		"""Load part or the entire Layer as a dataframe."""
 		if self._dataframe is not None:
-			return self._dataframe
+			return (self._dataframe, None)
 
 		if self._db_url is not None:
 			# load from PostGIS
@@ -55,7 +61,7 @@ class Layer:
 
 				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
 				self._conn = None
-				return gdf.to_crs(pcs)
+				return (gdf.to_crs(pcs), None)
 
 			cell_ids = tile_bbox(bbox)
 
@@ -65,12 +71,16 @@ class Layer:
 
 			self._conn = None
 
-			return together_geo
+			# build footprint from cell_ids
+			polygons = [[s2sphere.LatLng.from_point(s2sphere.Cell(cellid).get_vertex(v)) for v in range(4)] for cellid in cell_ids]
+			polygons = [[Point(v.lng(), v.lat()) for v in polygon] for polygon in polygons]
+
+			return (together_geo, MultiPolygon(polygons))
 
 		if bbox is None:
-			return gpd.read_file(self.filename)
+			return (gpd.read_file(self.filename), None)
 		else:
-			return gpd.read_file(self.filename, bbox=bbox)
+			return (gpd.read_file(self.filename, bbox=bbox), None)
 
 	@lru_cache(maxsize=512)
 	def _load_tile(self, cellid, pcs):
@@ -93,14 +103,14 @@ class Layer:
 	@property
 	def dataframe(self):
 		"""Load an entire Layer as a dataframe."""
-		return self._load()
+		return self._load(None)
 
 	"""Read into a Layer at a specific geometry (WGS84)."""
 	def inside_bbox(self, bbox, pcs='EPSG:4326'):
 		if not isinstance(bbox, tuple) or len(bbox) != 4:
 			raise TypeError('inside_bbox expected bbox to be a 4-tuple')
 
-		return self._load(bbox=bbox, pcs=pcs)
+		return self._load(box(*bbox), pcs=pcs)
 
 
 """VisibleLayer represents Layer data, as seen from a geometry."""
