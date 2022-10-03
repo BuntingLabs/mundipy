@@ -30,6 +30,11 @@ def spatial_cache_footprint(fn, maxsize=128):
 	# list of (shape, result)
 	cache = []
 
+	cache_info = {
+		'hits': 0,
+		'misses': 0
+	}
+
 	def check_cache_first(*args, **kwargs):
 		nonlocal cache
 
@@ -51,9 +56,11 @@ def spatial_cache_footprint(fn, maxsize=128):
 			for cache_item in cache:
 				# cache hit
 				if cache_item[1].contains(shape):
+					cache_info['hits'] += 1
 					return cache_item[0]
 
 		# cache miss
+		cache_info['misses'] += 1
 		res, footprint = fn(*args, **kwargs)
 
 		if footprint is not None:
@@ -61,5 +68,7 @@ def spatial_cache_footprint(fn, maxsize=128):
 			cache = [(res, footprint)] + cache[:maxsize-1]
 
 		return res
+
+	check_cache_first.cache_info = cache_info
 
 	return check_cache_first
