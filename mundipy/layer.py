@@ -6,6 +6,20 @@ from sqlalchemy import create_engine
 from functools import lru_cache, partial
 import s2sphere
 
+def tile_bbox(bbox):
+	# tile the area
+	r = s2sphere.RegionCoverer()
+	# cell level 20 = typical edge length of 7-10m or 30ft
+	r.max_level = 14
+	r.min_level = 14
+
+	p1 = s2sphere.LatLng.from_degrees(bbox[3], bbox[0])
+	p2 = s2sphere.LatLng.from_degrees(bbox[1], bbox[2])
+
+	cell_ids = r.get_covering(s2sphere.LatLngRect.from_point_pair(p1, p2))
+
+	return cell_ids
+
 """A Layer represents a group of spatial data."""
 class Layer:
 
@@ -46,15 +60,7 @@ class Layer:
 				self._conn = None
 				return gdf.to_crs(pcs)
 
-			# tile the area
-			r = s2sphere.RegionCoverer()
-			# cell level 20 = typical edge length of 7-10m or 30ft
-			r.max_level = 16
-
-			p1 = s2sphere.LatLng.from_degrees(bbox[3], bbox[0])
-			p2 = s2sphere.LatLng.from_degrees(bbox[1], bbox[2])
-
-			cell_ids = r.get_covering(s2sphere.LatLngRect.from_point_pair(p1, p2))
+			cell_ids = tile_bbox(bbox)
 
 			tiles = [self._load_tile(cellid, pcs) for cellid in cell_ids]
 			together = pd.concat(tiles)
