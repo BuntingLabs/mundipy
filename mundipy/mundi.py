@@ -160,7 +160,7 @@ class Mundi:
             ax.legend(handles=Q.plot_handles, loc='upper right')
             plt.show()
 
-    def q(self, fn, progressbar=False, n=0):
+    def q(self, fn, progressbar=False, n_start=0, n_end=0):
         # make iterator unique by geometry
         # TODO: drop duplicates, except it's very slow
         unique_iterator = self.main.dataframe
@@ -168,9 +168,9 @@ class Mundi:
         res_keys = None
         res_outs = dict()
         # progressbar optional
-        finiter = list(unique_iterator.iterrows())
+        finiter = list(unique_iterator.iterrows())[n_start:n_end]
         if progressbar:
-            finiter = tqdm(finiter, total=min(n, len(unique_iterator)))
+            finiter = tqdm(finiter, total=len(finiter))
 
         for idx, window in finiter:
             # fn(Q) can edit window
@@ -199,9 +199,5 @@ class Mundi:
             for key, val in res.items():
                 res_outs[key].append(val)
             res_outs['geometry'].append(original_shape)
-
-            # check n
-            if n > 0 and len(res_outs['geometry']) == n:
-                break
 
         return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry='geometry')
