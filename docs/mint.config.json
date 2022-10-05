@@ -58,6 +58,10 @@
     {
       "group": "Coordinate Systems",
       "pages": ["projected-coordinate-systems"]
+    },
+    {
+      "group": "Utilities",
+      "pages": ["spatial-lru-cache"]
     }
   ],
   "footerSocials": {
