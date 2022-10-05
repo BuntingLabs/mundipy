@@ -16,6 +16,12 @@ The footprint spatial cache considers every function execution to have a *spatia
 
 For example, a spatial footprint cache is useful if we were to calculate nationality based on one's place of birth. The first execution might be `f('New York City') => 'American'`. With the spatial footprint cache, we would return the United States' border, in which all future calls can resolve to `'American'`.
 
+<Frame>
+  <img src="graphics/spatial_cache_animation.gif" alt="spatial cache animation" title="spatial cache animation" />
+</Frame>
+
+> An animation of calculating the state a point is in, annotated with whether the state has been cached and if it's a cache hit or miss.
+
 When we wrap a function in `spatial_footprint_cache`, we must change the return value. Calls should return a two-tuple, `(result, footprint)`, where `footprint` is a `shapely` geometry or `None` if the result should not be cached.
 
 ```py cache_nationality.py
@@ -41,6 +47,15 @@ def calculate_nationality(place_of_birth: Point):
 The result will be cached for the `geometry` that is returned.
 
 The size of the cache can be tweaked with `@spatial_cache_footprint(maxsize=128)`.
+
+### Cache info
+
+Statistics about cache hits or misses can be shown with `fn.cache_info`:
+
+```py
+print(fn.cache_info)
+# {'hits': 1, 'misses': 3}
+```
 
 ## Union spatial cache
 
