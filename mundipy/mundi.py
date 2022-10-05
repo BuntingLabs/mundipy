@@ -203,7 +203,16 @@ class Mundi:
                 raise TypeError('function passed to mundi.q() returned dict with different keys')
 
             for key, val in res.items():
-                res_outs[key].append(val)
+                # returned straight from mundi.q()
+                # will need to translate from local PCS to WGS84
+                # if this is the geometry column
+                if key == res_shapely_col:
+                    to_wgs = pyproj_transform(Q.pcs, 'EPSG:4326')
+                    geodetic_out = transform(to_wgs, val)
+
+                    res_outs[key].append(geodetic_out)
+                else:
+                    res_outs[key].append(val)
 
             if res_shapely_col == 'geometry':
                 res_outs['geometry'].append(original_shape)
