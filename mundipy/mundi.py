@@ -166,6 +166,7 @@ class Mundi:
         unique_iterator = self.main.dataframe
 
         res_keys = None
+        res_shapely_col = 'geometry'
         res_outs = dict()
         # progressbar optional
         finiter = list(unique_iterator.iterrows())[n_start:n_end]
@@ -190,14 +191,21 @@ class Mundi:
             if res_keys is None:
                 res_keys = res.keys()
 
-                for key in res.keys():
+                for key, val in res.items():
                     res_outs[key] = []
-                res_outs['geometry'] = []
+
+                    if isinstance(val, BaseGeometry):
+                        res_shapely_col = key
+
+                if res_shapely_col == 'geometry':
+                    res_outs['geometry'] = []
             elif res_keys != res.keys():
                 raise TypeError('function passed to mundi.q() returned dict with different keys')
 
             for key, val in res.items():
                 res_outs[key].append(val)
-            res_outs['geometry'].append(original_shape)
 
-        return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry='geometry')
+            if res_shapely_col == 'geometry':
+                res_outs['geometry'].append(original_shape)
+
+        return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry=res_shapely_col)
