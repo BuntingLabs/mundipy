@@ -24,8 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          poetry install --with test
-          python -m pip install pytest
+          poetry install --with test --no-interaction
       - name: Test with pytest
         run: |
-          python -m pytest
+          poetry run pytest
