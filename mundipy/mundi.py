@@ -1,5 +1,6 @@
 import json
 import urllib.parse
+import difflib
 
 from tqdm import tqdm
 import geopandas as gpd
@@ -66,6 +67,15 @@ class MundiQ:
             gdf = grab_from_osm(tups=args[1], bbox=('%f,%f,%f,%f' % (p2, p1, p4, p3)))
             # convert to local CRS, because grab_from_osm gives WGS84
             return VisibleLayer(Layer(gdf), self.bbox(), self.center.geometry, pcs=self.pcs)
+
+        # this is an unknown dataset, throw a useful error
+        possible_datasets = list(self.mapdata.collections.keys()) + ['openstreetmap', 'osm']
+        similar_dataset_name = difflib.get_close_matches(dataset, possible_datasets, n=1)
+
+        if len(similar_dataset_name) == 0:
+            raise TypeError('Unknown dataset name %s was passed to Q()' % dataset)
+        else:
+            raise TypeError('Unknown dataset name %s was passed to Q(), did you mean %s?' % (dataset, possible_datasets[0]))
 
     def _bbox(self, distance=500):
         """Builds a bounding box around the center object in the local coordinate system."""
