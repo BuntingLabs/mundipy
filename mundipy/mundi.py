@@ -179,7 +179,10 @@ class Mundi:
         res_shapely_col = 'geometry'
         res_outs = dict()
         # progressbar optional
-        finiter = list(unique_iterator.iterrows())[n_start:n_end]
+        finiter = list(unique_iterator.iterrows())[n_start:]
+        if n_end > 0:
+            finiter = finiter[:n_end]
+
         if progressbar:
             finiter = tqdm(finiter, total=len(finiter))
 
@@ -226,5 +229,10 @@ class Mundi:
 
             if res_shapely_col == 'geometry':
                 res_outs['geometry'].append(original_shape)
+
+        # if res_outs is empty, give a useful error message
+        # creating a GeoDataFrame with an empty array gives an error
+        if len(res_outs) == 0:
+            raise ValueError('all results from mundi.q() process fn were None')
 
         return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry=res_shapely_col)
