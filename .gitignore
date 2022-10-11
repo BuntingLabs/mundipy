@@ -4,6 +4,7 @@
 # data formats
 *.csv
 *.geojson
+!tests/fixtures/*.geojson
 
 .DS_Store
 
