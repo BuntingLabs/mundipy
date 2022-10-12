@@ -6,7 +6,7 @@ from tqdm import tqdm
 import geopandas as gpd
 import pandas as pd
 from shapely.ops import transform
-from shapely.geometry import Polygon, LineString, Point, box
+from shapely.geometry import Polygon, MultiPolygon, LineString, Point, box
 from shapely.geometry.base import BaseGeometry
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -93,7 +93,7 @@ class MundiQ:
 
         # coerce shape into a GeoSeries, no matter what it is
         # shape can literally be anything
-        if isinstance(shape, Polygon):
+        if isinstance(shape, Polygon) or isinstance(shape, MultiPolygon):
             shape = gpd.GeoSeries([shape])
         elif isinstance(shape, gpd.GeoDataFrame):
             shape = shape.geometry
