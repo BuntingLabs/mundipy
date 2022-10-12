@@ -20,6 +20,20 @@ def test_mundi_q():
 
     assert len(outs) == 3
 
+def test_mundi_q_n():
+    mundi = Mundi(Map({
+        'points': 'tests/fixtures/points.geojson',
+        }), 'points', units='feet')
+
+    def process(Q):
+        return {
+            'center': 3.14
+        }
+
+    outs = mundi.q(process, n_start=1, n_end=2)
+
+    assert len(outs) == 1
+
 def test_mundi_q_badcolumn():
     mundi = Mundi(Map({
         'points': 'tests/fixtures/points.geojson',

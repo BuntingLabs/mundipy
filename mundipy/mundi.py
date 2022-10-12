@@ -170,7 +170,7 @@ class Mundi:
             ax.legend(handles=Q.plot_handles, loc='upper right')
             plt.show()
 
-    def q(self, fn, progressbar=False, n_start=0, n_end=0):
+    def q(self, fn, progressbar=False, n_start=None, n_end=None):
         # make iterator unique by geometry
         # TODO: drop duplicates, except it's very slow
         unique_iterator = self.main.dataframe
@@ -179,9 +179,7 @@ class Mundi:
         res_shapely_col = 'geometry'
         res_outs = dict()
         # progressbar optional
-        finiter = list(unique_iterator.iterrows())[n_start:]
-        if n_end > 0:
-            finiter = finiter[:n_end]
+        finiter = list(unique_iterator.iterrows())[n_start:n_end]
 
         if progressbar:
             finiter = tqdm(finiter, total=len(finiter))
