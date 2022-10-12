@@ -66,3 +66,15 @@ def test_mundi_crs():
         return dict()
 
     mundi.plot(process_points, output_type='geojson')
+
+def test_no_pygeos():
+    mundi = Mundi(Map({
+        'neighborhoods': 'tests/fixtures/los-angeles.geojson',
+        }), 'neighborhoods', units='feet')
+
+    def process_points(Q):
+        Q.plot(Q(), 'neighborhood')
+
+        return dict()
+
+    mundi.plot(process_points, output_type='geojson')
