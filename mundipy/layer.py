@@ -86,9 +86,9 @@ class Layer:
 			return (together_geo, MultiPolygon(polygons).buffer(0))
 
 		if bbox is None:
-			return (gpd.read_file(self.filename), None)
+			return (gpd.read_file(self.filename).to_crs(pcs), None)
 		else:
-			return (gpd.read_file(self.filename, bbox=bbox), None)
+			return (gpd.read_file(self.filename, bbox=bbox).to_crs(pcs), None)
 
 	@lru_cache(maxsize=512)
 	def _load_tile(self, cellid, pcs):

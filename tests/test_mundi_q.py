@@ -53,3 +53,16 @@ def test_mundi_q_badcolumn():
         mundi.q(process_polygon)
     with pytest.raises(TypeError, match=re.escape('Unknown dataset name 1192823 was passed to Q()')):
         mundi.q(process_nothing)
+
+def test_mundi_crs():
+    mundi = Mundi(Map({
+        'points': 'tests/fixtures/points.geojson',
+        'texas': 'tests/fixtures/texas_epsg_2844.geojson',
+        }), 'points', units='feet')
+
+    def process_points(Q):
+        Q.plot(Q('texas').intersects(), 'texas')
+
+        return dict()
+
+    mundi.plot(process_points, output_type='geojson')
