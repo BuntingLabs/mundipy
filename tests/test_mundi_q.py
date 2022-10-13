@@ -54,6 +54,22 @@ def test_mundi_q_badcolumn():
     with pytest.raises(TypeError, match=re.escape('Unknown dataset name 1192823 was passed to Q()')):
         mundi.q(process_nothing)
 
+def test_mundi_q_inspect():
+    mundi = Mundi(Map({
+        'points': 'tests/fixtures/points.geojson',
+        'polygon': 'tests/fixtures/polygon.geojson',
+        }), 'points', units='feet')
+
+    def correct_dataset(Q, points, polygon):
+        return dict()
+    def not_in_mundi(Q, not_in_mundi):
+        return dict()
+
+    mundi.q(correct_dataset)
+
+    with pytest.raises(TypeError, match=re.escape('mundi process() function requests dataset \'not_in_mundi\', but no dataset was defined on Mundi')):
+        mundi.q(not_in_mundi)
+
 def test_mundi_crs():
     mundi = Mundi(Map({
         'points': 'tests/fixtures/points.geojson',

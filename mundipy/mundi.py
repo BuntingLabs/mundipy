@@ -1,6 +1,7 @@
 import json
 import urllib.parse
 import difflib
+import inspect
 
 from tqdm import tqdm
 import geopandas as gpd
@@ -76,6 +77,19 @@ class MundiQ:
             raise TypeError('Unknown dataset name %s was passed to Q()' % dataset)
         else:
             raise TypeError('Unknown dataset name %s was passed to Q(), did you mean %s?' % (dataset, possible_datasets[0]))
+
+    def call_process(self, fn):
+        # pass dataset as dataframe if requested
+        args = inspect.getfullargspec(fn)[0][1:]
+
+        df_args = []
+        for arg in args:
+            try:
+                df_args.append(self.mapdata.collections[arg])
+            except KeyError:
+                raise TypeError('mundi process() function requests dataset \'%s\', but no dataset was defined on Mundi' % arg)
+
+        return fn(self, *args)
 
     def _bbox(self, distance=500):
         """Builds a bounding box around the center object in the local coordinate system."""
@@ -158,7 +172,7 @@ class Mundi:
         # TODO: drop duplicates, except it's very slow
         #.drop_duplicates(subset=['geometry'])
         Q = MundiQ(self.main.dataframe.iloc[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units, clip_distance=clip_distance)
-        res = fn(Q)
+        res = Q.call_process(fn)
 
         if output_type == 'geojson':
             # convert to dfs
@@ -190,7 +204,7 @@ class Mundi:
 
             try:
                 Q = MundiQ(window, self.mapdata)
-                res = fn(Q)
+                res = Q.call_process(fn)
             except NoProjectionFoundError:
                 continue
 
