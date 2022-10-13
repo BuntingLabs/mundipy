@@ -1,5 +1,6 @@
 
 from mundipy.pcs import choose_pcs
+from mundipy.cache import spatial_cache_footprint
 from shapely.geometry import box
 
 def test_cache_choose():
@@ -10,3 +11,10 @@ def test_cache_choose():
     res_second = choose_pcs(polygon)
 
     assert res_first == res_second
+
+def test_cache_none():
+    @spatial_cache_footprint
+    def fn(arg):
+        return None
+
+    assert fn(box(-118.843683, 34.052235, -118.143683, 34.552235)) == None

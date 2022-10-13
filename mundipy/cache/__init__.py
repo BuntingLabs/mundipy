@@ -61,7 +61,11 @@ def spatial_cache_footprint(fn, maxsize=128):
 
 		# cache miss
 		cache_info['misses'] += 1
-		res, footprint = fn(*args, **kwargs)
+		out = fn(*args, **kwargs)
+		if out is None:
+			return None
+
+		res, footprint = out
 
 		if footprint is not None:
 			# re-order cache list to include the new hit
