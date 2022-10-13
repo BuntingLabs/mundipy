@@ -15,7 +15,7 @@ import matplotlib.patches as mpatches
 from mundipy.map import Map
 from mundipy.layer import Layer, VisibleLayer
 from mundipy.api.osm import grab_from_osm
-from mundipy.pcs import choose_pcs
+from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
 
 class MundiQ:
@@ -188,8 +188,11 @@ class Mundi:
             # fn(Q) can edit window
             original_shape = window.geometry
 
-            Q = MundiQ(window, self.mapdata)
-            res = fn(Q)
+            try:
+                Q = MundiQ(window, self.mapdata)
+                res = fn(Q)
+            except NoProjectionFoundError:
+                continue
 
             # if res is None, skip
             if res is None:
