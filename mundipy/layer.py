@@ -113,6 +113,10 @@ class Layer:
 		"""Load an entire Layer as a dataframe."""
 		return self._load(None)
 
+	@lru_cache(maxsize=8)
+	def local_dataframe(self, pcs):
+		return self.dataframe.to_crs(pcs)
+
 	"""Read into a Layer at a specific geometry (WGS84)."""
 	def inside_bbox(self, bbox, pcs='EPSG:4326'):
 		if not isinstance(bbox, tuple) or len(bbox) != 4:

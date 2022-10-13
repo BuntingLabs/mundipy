@@ -85,11 +85,11 @@ class MundiQ:
         df_args = []
         for arg in args:
             try:
-                df_args.append(self.mapdata.collections[arg])
+                df_args.append(self.mapdata.collections[arg].local_dataframe(self.pcs))
             except KeyError:
                 raise TypeError('mundi process() function requests dataset \'%s\', but no dataset was defined on Mundi' % arg)
 
-        return fn(self, *args)
+        return fn(self, *df_args)
 
     def _bbox(self, distance=500):
         """Builds a bounding box around the center object in the local coordinate system."""
@@ -125,8 +125,8 @@ class MundiQ:
 
         # clip shape by bounding box
         # especially nearby roads make the plot unreadable
-        #
-        shape = gpd.clip(shape, mask=self._bbox(distance=self.clip_distance))
+        if self.clip_distance > 0:
+            shape = gpd.clip(shape, mask=self._bbox(distance=self.clip_distance))
 
         # LineString and Point won't show up when plotted; buffer
         shape = shape.apply(lambda g: g.buffer(2) if isinstance(g, LineString) or isinstance(g, Point) else g)
