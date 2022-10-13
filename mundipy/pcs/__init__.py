@@ -52,7 +52,14 @@ def choose_pcs(box, units='meters'):
 			return (transform_epsg(potential_pcs), geo)
 
 	# no projection found, if we're here
-	raise NoProjectionFoundError
+	if units == 'meters':
+		return ({
+			'name': 'World Mollweide',
+			'crs': 'ESRI:54009',
+			'units': 'meters'
+		}, None)
+	else:
+		raise NoProjectionFoundError
 
 def suggest_pcs(box, units='meters', n=3):
 	"""Suggest multiple projected coordinate systems from a shapely geometry with specified units for the axes."""

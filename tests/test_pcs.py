@@ -52,4 +52,11 @@ def test_choose_pcs():
 
 def test_no_pcs():
     with pytest.raises(NoProjectionFoundError):
-        choose_pcs(box(-36.123047,50.930738,-31.135254,53.186288, ccw=True))
+        choose_pcs(box(-36.123047,50.930738,-31.135254,53.186288, ccw=True), units='feet')
+
+def test_global_pcs():
+    assert choose_pcs(box(-36.123047,50.930738,-31.135254,53.186288, ccw=True), units='meters') == {
+        'name': 'World Mollweide',
+        'crs': 'ESRI:54009',
+        'units': 'meters'
+    }
