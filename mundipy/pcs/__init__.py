@@ -20,6 +20,9 @@ from mundipy.cache import spatial_cache_footprint
 
 CRS_DATASET = os.path.join(os.path.dirname(__file__), 'crs_enhanced.fgb')
 
+class NoProjectionFoundError(Exception):
+	pass
+
 @spatial_cache_footprint
 def choose_pcs(box, units='meters'):
 	"""Choose a projected coordinate system from a shapely geometry with specified units for the axes."""
@@ -47,6 +50,9 @@ def choose_pcs(box, units='meters'):
 				continue
 
 			return (transform_epsg(potential_pcs), geo)
+
+	# no projection found, if we're here
+	raise NoProjectionFoundError
 
 def suggest_pcs(box, units='meters', n=3):
 	"""Suggest multiple projected coordinate systems from a shapely geometry with specified units for the axes."""

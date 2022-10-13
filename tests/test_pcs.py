@@ -1,6 +1,7 @@
 
-from mundipy.pcs import choose_pcs
+from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from shapely.geometry import box
+import pytest
 
 def test_choose_pcs_bench(benchmark):
     bbox = (-118.843683, 34.052235, -118.143683, 34.552235)
@@ -48,3 +49,7 @@ def test_choose_pcs():
         'crs': 'EPSG:4796',
         'units': 'meters'
     }
+
+def test_no_pcs():
+    with pytest.raises(NoProjectionFoundError):
+        choose_pcs(box(-36.123047,50.930738,-31.135254,53.186288, ccw=True))
