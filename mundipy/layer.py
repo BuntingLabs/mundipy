@@ -8,6 +8,7 @@ from functools import lru_cache, partial
 import s2sphere
 
 from mundipy.cache import spatial_cache_footprint
+from mundipy.geometry import from_dataframe
 
 r = s2sphere.RegionCoverer()
 
@@ -116,6 +117,10 @@ class Layer:
 	@lru_cache(maxsize=8)
 	def local_dataframe(self, pcs):
 		return self.dataframe.to_crs(pcs)
+
+	@lru_cache(maxsize=8)
+	def geometry_collection(self, pcs):
+		return from_dataframe(self.local_dataframe(pcs))
 
 	"""Read into a Layer at a specific geometry (WGS84)."""
 	def inside_bbox(self, bbox, pcs='EPSG:4326'):

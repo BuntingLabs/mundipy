@@ -1,0 +1,253 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-ide",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/2378691825",
+        "addr:city": "Burbank",
+        "addr:housenumber": "3413",
+        "addr:postcode": "91505",
+        "addr:state": "CA",
+        "addr:street": "West Magnolia Boulevard",
+        "amenity": "cafe",
+        "cuisine": "coffee_shop",
+        "description": "Family owned cafe serving breakfast, lunch and coffee.",
+        "name": "Romancing the Bean",
+        "opening_hours": "Mo-Sa 07:00-19:00; Su 08:00-18:00",
+        "phone": "+1-818-845-2326",
+        "shop": "coffee",
+        "website": "https://www.romancingthebeancafe.com/"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.3443726,
+          34.1689253
+        ]
+      },
+      "id": "node/2378691825"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/3181482548",
+        "addr:city": "Pasadena",
+        "addr:housenumber": "594",
+        "addr:state": "CA",
+        "addr:street": "East Colorado Boulevard",
+        "amenity": "cafe",
+        "cuisine": "coffee_shop",
+        "name": "Urth Caffé - Pasadena",
+        "organic": "yes",
+        "outdoor_seating": "yes",
+        "phone": "626) 844-4644",
+        "shop": "coffee",
+        "website": "https://www.urthcaffe.com/"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.138219,
+          34.1456695
+        ]
+      },
+      "id": "node/3181482548"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/4121132652",
+        "name": "Gregs Deli",
+        "shop": "coffee"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.25589,
+          34.0459494
+        ]
+      },
+      "id": "node/4121132652"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/4682071737",
+        "addr:housenumber": "11118",
+        "addr:street": "Magnolia",
+        "description": "Gourmet coffee with fresh baked pies & baked goods in a room of reclaimed wood, metal & glass.",
+        "name": "Republic Of Pie",
+        "opening_hours": "Mo-Th, Su 08:00-22:00; Fr, Sa 08:00-23:00",
+        "phone": "+1 818-308-7990",
+        "shop": "coffee",
+        "website": "https://www.republicofpie.com/"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.3731079,
+          34.1647873
+        ]
+      },
+      "id": "node/4682071737"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/4682085295",
+        "addr:housenumber": "5251",
+        "addr:street": "Lankershim Blvd",
+        "description": "Small, contemporary coffee shop with panini, pastries & a wall mural by local artists.",
+        "name": "Joe Coffee",
+        "opening_hours": "Mo-Sa 08:00-19:00; Su 09:00-19:00",
+        "phone": "+1 818-980-5092",
+        "shop": "coffee",
+        "website": "https://joecoffeela.com/"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.3757019,
+          34.1661301
+        ]
+      },
+      "id": "node/4682085295"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/5272342310",
+        "email": "shannon@priscillacoffee.com",
+        "name": "Priscilla's Coffee",
+        "phone": "(818)-843-5707",
+        "shop": "coffee",
+        "website": "http://www.priscillascoffee.com/home.html"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.3446609,
+          34.1522787
+        ]
+      },
+      "id": "node/5272342310"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/5444373917",
+        "addr:street": "Santa Monica",
+        "amenity": "cafe",
+        "brand": "Philz Coffee",
+        "brand:wikidata": "Q18156812",
+        "cuisine": "coffee_shop",
+        "name": "Philz Coffee",
+        "name:fa": "کافه فیلز",
+        "shop": "coffee",
+        "takeaway": "yes"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.493647,
+          34.0178936
+        ]
+      },
+      "id": "node/5444373917"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/6375108177",
+        "name": "Coffee Grounds",
+        "shop": "coffee"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.1926595,
+          33.76948
+        ]
+      },
+      "id": "node/6375108177"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/6375249607",
+        "name": "Daily Perks",
+        "shop": "coffee"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.1413301,
+          33.7750103
+        ]
+      },
+      "id": "node/6375249607"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/6481743935",
+        "addr:city": "Los Angeles",
+        "addr:housenumber": "300",
+        "addr:state": "CA",
+        "addr:street": "S Santa Fe Avenue",
+        "name": "Bulletproof Coffee",
+        "shop": "coffee"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.231984,
+          34.0451433
+        ]
+      },
+      "id": "node/6481743935"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/8533430635",
+        "amenity": "cafe",
+        "brand": "Starbucks",
+        "brand:wikidata": "Q37158",
+        "brand:wikipedia": "en:Starbucks",
+        "cuisine": "coffee_shop",
+        "name": "Starbucks",
+        "official_name": "Starbucks Coffee",
+        "shop": "coffee",
+        "takeaway": "yes"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.289455,
+          34.1717576
+        ]
+      },
+      "id": "node/8533430635"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9512349107",
+        "name": "Later Days Coffee Co",
+        "shop": "coffee"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.3857216,
+          33.8398447
+        ]
+      },
+      "id": "node/9512349107"
+    }
+  ]
+}

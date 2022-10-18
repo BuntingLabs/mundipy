@@ -86,7 +86,7 @@ class MundiQ:
         df_args = []
         for arg in args:
             try:
-                df_args.append(self.mapdata.collections[arg].local_dataframe(self.pcs))
+                df_args.append(self.mapdata.collections[arg].geometry_collection(self.pcs))
             except KeyError:
                 raise TypeError('mundi process() function requests dataset \'%s\', but no dataset was defined on Mundi' % arg)
 

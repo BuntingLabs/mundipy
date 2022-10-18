@@ -59,7 +59,7 @@ def from_geojson(geojson: dict):
 		elif feature['geometry']['type'] == 'Polygon':
 			features.append(Polygon(shape(feature['geometry']), feature['properties']))
 		elif feature['geometry']['type'] == 'MultiPolygon':
-			features.append(MultiPoint(shape(feature['geometry']), feature['properties']))
+			features.append(MultiPolygon(shape(feature['geometry']), feature['properties']))
 		else:
 			raise TypeError('geometry type was %s, expected Point/Polygon/MultiPolygon' % feature['geometry']['type'])
 
