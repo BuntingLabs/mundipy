@@ -9,7 +9,7 @@ def test_mundi_q():
         'polygon': 'tests/fixtures/polygon.geojson',
         }), 'points', units='feet')
 
-    def process(Q):
+    def process(Q, point):
         larger = Q('polygon').intersects()
 
         return {
@@ -25,7 +25,7 @@ def test_mundi_q_n():
         'points': 'tests/fixtures/points.geojson',
         }), 'points', units='feet')
 
-    def process(Q):
+    def process(Q, point):
         return {
             'center': 3.14
         }
@@ -40,11 +40,11 @@ def test_mundi_q_badcolumn():
         'polygon': 'tests/fixtures/polygon.geojson',
         }), 'points', units='feet')
 
-    def process_points(Q):
+    def process_points(Q, center):
         Q('pointss')
-    def process_polygon(Q):
+    def process_polygon(Q, center):
         Q('polyg0n')
-    def process_nothing(Q):
+    def process_nothing(Q, center):
         Q('1192823')
 
     with pytest.raises(TypeError, match=re.escape('Unknown dataset name pointss was passed to Q(), did you mean points?')):
@@ -60,9 +60,9 @@ def test_mundi_q_inspect():
         'polygon': 'tests/fixtures/polygon.geojson',
         }), 'points', units='feet')
 
-    def correct_dataset(Q, points, polygon):
+    def correct_dataset(Q, point, points, polygon):
         return dict()
-    def not_in_mundi(Q, not_in_mundi):
+    def not_in_mundi(Q, point, not_in_mundi):
         return dict()
 
     mundi.q(correct_dataset)
@@ -76,7 +76,7 @@ def test_mundi_crs():
         'texas': 'tests/fixtures/texas_epsg_2844.geojson',
         }), 'points', units='feet')
 
-    def process_points(Q):
+    def process_points(Q, point):
         Q.plot(Q('texas').intersects(), 'texas')
 
         return dict()
@@ -88,7 +88,7 @@ def test_no_pygeos():
         'neighborhoods': 'tests/fixtures/los-angeles.geojson',
         }), 'neighborhoods', units='feet')
 
-    def process_points(Q):
+    def process_points(Q, neighborhood):
         Q.plot(Q(), 'neighborhood')
 
         return dict()

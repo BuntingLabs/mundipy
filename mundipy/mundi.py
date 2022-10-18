@@ -18,6 +18,7 @@ from mundipy.layer import Layer, VisibleLayer
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
+from mundipy.geometry import from_row_series
 
 class MundiQ:
     def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
@@ -80,7 +81,7 @@ class MundiQ:
 
     def call_process(self, fn):
         # pass dataset as dataframe if requested
-        args = inspect.getfullargspec(fn)[0][1:]
+        args = inspect.getfullargspec(fn)[0][2:]
 
         df_args = []
         for arg in args:
@@ -89,7 +90,8 @@ class MundiQ:
             except KeyError:
                 raise TypeError('mundi process() function requests dataset \'%s\', but no dataset was defined on Mundi' % arg)
 
-        return fn(self, *df_args)
+        center = from_row_series(self.center)
+        return fn(self, center, *df_args)
 
     def _bbox(self, distance=500):
         """Builds a bounding box around the center object in the local coordinate system."""
