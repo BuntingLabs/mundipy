@@ -3,6 +3,7 @@ import json
 import shapely.geometry as geom
 from shapely.geometry import shape
 import geopandas as gpd
+import pandas as pd
 
 class Point(geom.Point):
 
@@ -63,6 +64,20 @@ def from_geojson(geojson: dict):
 			raise TypeError('geometry type was %s, expected Point/Polygon/MultiPolygon' % feature['geometry']['type'])
 
 	return features
+
+def from_row_series(row: pd.Series):
+	features = dict(row)
+	geo = row.geometry
+	del features['geometry']
+
+	if isinstance(geo, geom.Point):
+		return Point(geo, features)
+	elif isinstance(geo, geom.Polygon):
+		return Polygon(geo, features)
+	elif isinstance(geo, geom.MultiPolygon):
+		return MultiPolygon(geo, features)
+	else:
+		raise TypeError('from_row_series got non-Point/Polygon/MultiPolygon')
 
 def from_dataframe(gdf: gpd.GeoDataFrame):
 	return from_geojson(json.loads(gdf.to_json()))
