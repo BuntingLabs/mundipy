@@ -1,13 +1,14 @@
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import box, Point, Polygon, MultiPolygon
 import shapely.wkt
+from shapely.ops import transform
 import geopandas as gpd
 import pandas as pd
 from sqlalchemy import create_engine
 from functools import lru_cache, partial
 import s2sphere
 
-from mundipy.cache import spatial_cache_footprint
+from mundipy.cache import spatial_cache_footprint, pyproj_transform
 from mundipy.geometry import from_dataframe
 
 r = s2sphere.RegionCoverer()
@@ -137,6 +138,17 @@ class LayerView:
 	# iterate through items of the dataset
 	def __iter__(self):
 		yield from self.layer.geometry_collection(self.pcs)
+
+	def intersects(self, geom):
+		if not isinstance(self.layer, Dataset):
+			raise TypeError('intersects() on not Dataset undefined')
+
+		# convert geom to EPSG:4326
+		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
+		bbox = transform(to_wgs, geom).bounds
+
+		potentially_intersecting_gdf = self.layer.inside_bbox(bbox, self.pcs)
+		return from_dataframe(potentially_intersecting_gdf[potentially_intersecting_gdf.intersects(geom)])
 
 """VisibleLayer represents Layer data, as seen from a geometry."""
 class VisibleLayer:
