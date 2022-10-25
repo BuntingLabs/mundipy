@@ -129,6 +129,14 @@ class Layer:
 
 		return self._load(box(*bbox), pcs=pcs)
 
+class LayerView:
+	def __init__(self, layer, pcs):
+		self.layer = layer
+		self.pcs = pcs
+
+	# iterate through items of the dataset
+	def __iter__(self):
+		yield from self.layer.geometry_collection(self.pcs)
 
 """VisibleLayer represents Layer data, as seen from a geometry."""
 class VisibleLayer:

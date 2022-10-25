@@ -7,7 +7,7 @@ def test_coffeeshops():
         'coffeeshops': 'tests/fixtures/la_coffeeshops.geojson',
         }), 'coffeeshops', units='feet')
 
-    def process(Q, coffeeshop, neighborhoods):
+    def process(coffeeshop, neighborhoods):
         coffeeshop['neighborhood_name'] = 'none'
 
         for neighborhood in neighborhoods:

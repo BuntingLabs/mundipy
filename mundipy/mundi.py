@@ -15,7 +15,7 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 
 from mundipy.map import Map
-from mundipy.layer import Layer, VisibleLayer
+from mundipy.layer import Layer, LayerView, VisibleLayer
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
@@ -88,7 +88,7 @@ class MundiQ:
         df_args = []
         for arg in args:
             try:
-                df_args.append(self.mapdata.collections[arg].geometry_collection(self.pcs))
+                df_args.append(LayerView(self.mapdata.collections[arg], self.pcs))
             except KeyError:
                 raise TypeError('mundi process() function requests dataset \'%s\', but no dataset was defined on Mundi' % arg)
 
