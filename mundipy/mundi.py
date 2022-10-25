@@ -2,6 +2,7 @@ import json
 import urllib.parse
 import difflib
 import inspect
+from contextvars import copy_context
 
 from tqdm import tqdm
 import geopandas as gpd
@@ -19,6 +20,7 @@ from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
 from mundipy.geometry import from_row_series
+from mundipy.utils import _plot
 
 class MundiQ:
     def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
@@ -81,7 +83,7 @@ class MundiQ:
 
     def call_process(self, fn):
         # pass dataset as dataframe if requested
-        args = inspect.getfullargspec(fn)[0][2:]
+        args = inspect.getfullargspec(fn)[0][1:]
 
         df_args = []
         for arg in args:
@@ -91,7 +93,12 @@ class MundiQ:
                 raise TypeError('mundi process() function requests dataset \'%s\', but no dataset was defined on Mundi' % arg)
 
         center = from_row_series(self.center)
-        return fn(self, center, *df_args)
+
+        # call fn with a relevant context
+        ctx = copy_context()
+        ctx.run(lambda: _plot.set(self.plot))
+
+        return ctx.run(fn, center, *df_args)
 
     def _bbox(self, distance=500):
         """Builds a bounding box around the center object in the local coordinate system."""
