@@ -23,8 +23,8 @@ def tile_bbox(polygon):
 	# 14 is ~0.3km2 and 600m edge length
 	return r.get_simple_covering(rect, p1.to_point(), 14)
 
-"""A Layer represents a group of spatial data."""
-class Layer:
+"""A Dataset represents a group of spatial data."""
+class Dataset:
 
 	def __init__(self, data):
 		self.filename = None
@@ -34,7 +34,7 @@ class Layer:
 
 		self._conn = None
 
-		""" Initialize a Layer from a data source. """
+		""" Initialize a Dataset from a data source. """
 		if isinstance(data, gpd.GeoDataFrame):
 			self._dataframe = data
 		elif isinstance(data, dict):
@@ -43,12 +43,12 @@ class Layer:
 		elif isinstance(data, str):
 			self.filename = data
 		else:
-			raise TypeError('data for Layer() is not filename, GeoDataFrame or dict with PostgreSQL details')
+			raise TypeError('data for Dataset() is not filename, GeoDataFrame or dict with PostgreSQL details')
 
 	@spatial_cache_footprint
 	def _load(self, bbox, pcs='EPSG:4326'):
 		"""
-		Load part or the entire Layer as a dataframe.
+		Load part or the entire Dataset as a dataframe.
 
 		Takes bbox as a 4-tuple of WGS84 coordinates (lon, lat). bbox can be
 		None to load the entire dataset.
@@ -111,7 +111,7 @@ class Layer:
 
 	@property
 	def dataframe(self):
-		"""Load an entire Layer as a dataframe."""
+		"""Load an entire Dataset as a dataframe."""
 		return self._load(None)
 
 	@lru_cache(maxsize=8)
@@ -122,7 +122,7 @@ class Layer:
 	def geometry_collection(self, pcs):
 		return from_dataframe(self.local_dataframe(pcs))
 
-	"""Read into a Layer at a specific geometry (WGS84)."""
+	"""Read into a Dataset at a specific geometry (WGS84)."""
 	def inside_bbox(self, bbox, pcs='EPSG:4326'):
 		if not isinstance(bbox, tuple) or len(bbox) != 4:
 			raise TypeError('inside_bbox expected bbox to be a 4-tuple')

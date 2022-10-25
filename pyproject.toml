@@ -31,6 +31,7 @@ overpy = "^0.6"
 matplotlib = "^3.6.0"
 SQLAlchemy = "^1.4.40"
 s2sphere = "^0.2.5"
+fiona = "^1.8.21"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.3"

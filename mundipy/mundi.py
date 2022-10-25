@@ -4,6 +4,7 @@ import difflib
 import inspect
 from contextvars import copy_context
 
+import fiona
 from tqdm import tqdm
 import geopandas as gpd
 import pandas as pd
@@ -15,7 +16,7 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 
 from mundipy.map import Map
-from mundipy.layer import Layer, LayerView, VisibleLayer
+from mundipy.layer import Dataset, LayerView, VisibleLayer
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
@@ -50,10 +51,6 @@ class MundiQ:
     def __call__(self, *args):
         # variable length arguments
         dataset = args[0] if len(args) > 0 else None
-
-        # First, if it's just Q(), give the center.
-        if dataset == None:
-            return self.center
 
         # Next, if dataset is in the pool, return the
         # VisibleLayer
