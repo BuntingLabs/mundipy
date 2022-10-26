@@ -77,7 +77,7 @@ def from_row_series(row: pd.Series):
 	elif isinstance(geo, geom.MultiPolygon):
 		return MultiPolygon(geo, features)
 	else:
-		raise TypeError('from_row_series got non-Point/Polygon/MultiPolygon')
+		raise TypeError('from_row_series got %s, expected Point/Polygon/MultiPolygon' % str(type(geo)))
 
 def from_dataframe(gdf: gpd.GeoDataFrame):
 	return from_geojson(json.loads(gdf.to_json()))
