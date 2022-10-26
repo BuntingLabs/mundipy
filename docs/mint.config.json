@@ -53,7 +53,7 @@
     },
     {
       "group": "Core Concepts",
-      "pages": ["layer-management"]
+      "pages": ["layer-management", "spatial-indexing", "layer-view"]
     },
     {
       "group": "Coordinate Systems",

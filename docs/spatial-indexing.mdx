@@ -1,0 +1,33 @@
+---
+title: "Spatial Indexing"
+description: "Leveraging external spatial indexes to compute on subsets of a dataset."
+---
+
+Because mundipy lazy loads datasets by default, spatial operations
+tend to load a small percentage of the data at a time. This is enabled
+by external spatial indexing.
+
+For example, if we're working with a dataset of farms, loaded here
+in [FlatGeobuf](https://flatgeobuf.org/) format, we can quickly
+find all the farms that intersect with a particular geometry.
+
+```python
+from mundipy.layer import Dataset
+from shapely.geometry import box
+
+mundi = Mundi(Map({
+    'farms': Dataset('my/data/farms.fgb')
+    }), 'farms', units='feet')
+
+def process(farm, farms):
+    plot(parcel, 'main geometry')
+
+    canada_border = box(-137.812500,46.316584,-55.195313,73.775780)
+
+    # TODO: open in DataView
+    canadian_farms = farms.intersects()
+
+mundi.q(process)
+```
+
+We can 
