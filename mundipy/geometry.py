@@ -97,4 +97,4 @@ def from_row_series(row: pd.Series):
 		raise TypeError('from_row_series got %s, expected Point/LineString/Polygon/MultiPolygon' % str(type(geo)))
 
 def from_dataframe(gdf: gpd.GeoDataFrame):
-	return from_geojson(json.loads(gdf.to_json()))
+	return from_geojson(gdf.__geo_interface__)
