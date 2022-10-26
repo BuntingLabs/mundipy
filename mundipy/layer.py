@@ -1,3 +1,16 @@
+"""
+`Dataset`s and `LayerView`s form the core abstractions in mundipy.
+
+`Dataset` comprises any source for vector data. Instantiating a
+`Dataset` declares its accessibility, but does not automatically
+load features, as all features are lazily loaded.
+
+`LayerView` represents a collection of vector features, typically
+a subset from a `Dataset`. This makes queries like intersection
+and nearest much faster because only a subset of the `Dataset`
+must be loaded.
+"""
+
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import box, Point, Polygon, MultiPolygon
 import shapely.wkt
@@ -24,17 +37,28 @@ def tile_bbox(polygon):
 	# 14 is ~0.3km2 and 600m edge length
 	return r.get_simple_covering(rect, p1.to_point(), 14)
 
-"""A Dataset represents a group of spatial data."""
 class Dataset:
+	"""
+	A Dataset represents a source of vector features.
+
+	from mundipy.layer import Dataset
+
+	src = Dataset({
+ 		'url': 'postgresql://postgres@localhost:5432/postgres',
+		'table': 'table_name'
+	})
+
+	"""
 
 	def __init__(self, data):
+		""" Initialize a Dataset from a data source. """
+
 		self.filename = None
 		self._db_url = None
 		self._db_table = None
 
 		self._conn = None
 
-		""" Initialize a Dataset from a data source. """
 		if isinstance(data, dict):
 			self._db_url = data['url']
 			self._db_table = data['table']
@@ -125,21 +149,36 @@ class Dataset:
 		return self._load(box(*bbox), pcs=pcs)
 
 class LayerView:
+	"""
+	`LayerView` represents a collection of vector features in
+	a single dataset. It implements an `Iterable` interface,
+	allowing for one to loop through all features in the dataset,
+	or smart filtering without loading the entire dataset into
+	memory.
+	"""
+
 	def __init__(self, layer, pcs):
 		self.layer = layer
 		self.pcs = pcs
 
-	# iterate through items of the dataset
 	def __iter__(self):
+		"""
+		Iterate through all items of the dataset.
+		"""
 		yield from self.layer.geometry_collection(self.pcs)
 
-	"""
-	Returns an Iterator of mundipy geometries that intersect
-	with geom.
-
-	geom: inherits from shapely.geometry
-	"""
 	def intersects(self, geom):
+		"""
+		Returns an `Iterator` of mundipy geometries that intersect
+		with `geom`.
+
+		`geom` - inherits from `shapely.geometry`
+
+        from mundipy.utils import plot
+
+        for feat in layer.intersects(Point(-37.0, 42.1)):
+            plot(feat)
+		"""
 		if not isinstance(self.layer, Dataset):
 			raise TypeError('intersects() on not Dataset undefined')
 		if not isinstance(geom, BaseGeometry):
@@ -153,15 +192,15 @@ class LayerView:
 		potentially_intersecting_gdf = self.layer.inside_bbox(bbox, self.pcs)
 		return from_dataframe(potentially_intersecting_gdf[potentially_intersecting_gdf.intersects(geom)])
 
-	"""
-	Returns the nearest feature in this collection to the passed
-	geometry.
-
-	Returns None if the dataset has no features.
-
-	geom: inherits from shapely.geometry
-	"""
 	def nearest(self, geom):
+		"""
+		Returns the nearest feature in this collection to the passed
+		geometry.
+
+		Returns `None` if the dataset has no features.
+
+		`geom`: inherits from `shapely.geometry`
+		"""
 		if not isinstance(self.layer, Dataset):
 			raise TypeError('intersects() on not Dataset undefined')
 		if not isinstance(geom, BaseGeometry):
