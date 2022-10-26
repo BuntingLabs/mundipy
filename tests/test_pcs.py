@@ -14,9 +14,9 @@ def test_choose_pcs_bench(benchmark):
     result = benchmark(wrapper)
 
     assert result == {
-        'name': 'NAD83 / California zone 5',
-        'epsg': 26945,
-        'crs': 'EPSG:26945',
+        'name': 'WGS 84 / UTM zone 11N',
+        'epsg': 32611,
+        'crs': 'EPSG:32611',
         'units': 'meters'
     }
 

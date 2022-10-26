@@ -2,6 +2,7 @@
 import re
 import pytest
 from mundipy.mundi import Mundi, Map
+from mundipy.utils import plot
 
 def test_mundi_q():
     mundi = Mundi(Map({
@@ -9,11 +10,11 @@ def test_mundi_q():
         'polygon': 'tests/fixtures/polygon.geojson',
         }), 'points', units='feet')
 
-    def process(Q, point):
-        larger = Q('polygon').intersects()
+    def process(point, polygon):
+        larger = polygon.intersects(point)
 
         return {
-            'center': larger
+            'center': larger is None
         }
 
     outs = mundi.q(process)
@@ -25,7 +26,7 @@ def test_mundi_q_n():
         'points': 'tests/fixtures/points.geojson',
         }), 'points', units='feet')
 
-    def process(Q, point):
+    def process(point):
         return {
             'center': 3.14
         }
@@ -40,18 +41,18 @@ def test_mundi_q_badcolumn():
         'polygon': 'tests/fixtures/polygon.geojson',
         }), 'points', units='feet')
 
-    def process_points(Q, center):
-        Q('pointss')
-    def process_polygon(Q, center):
-        Q('polyg0n')
-    def process_nothing(Q, center):
-        Q('1192823')
+    def process_points(center, pointss):
+        pass
+    def process_polygon(center, polyg0n):
+        pass
+    def process_nothing(center, n1192823):
+        pass
 
-    with pytest.raises(TypeError, match=re.escape('Unknown dataset name pointss was passed to Q(), did you mean points?')):
+    with pytest.raises(TypeError, match=re.escape('mundi process() function requests dataset \'pointss\', but no dataset was defined on Mundi')):
         mundi.q(process_points)
-    with pytest.raises(TypeError, match=re.escape('Unknown dataset name polyg0n was passed to Q(), did you mean points?')):
+    with pytest.raises(TypeError, match=re.escape('mundi process() function requests dataset \'polyg0n\', but no dataset was defined on Mundi')):
         mundi.q(process_polygon)
-    with pytest.raises(TypeError, match=re.escape('Unknown dataset name 1192823 was passed to Q()')):
+    with pytest.raises(TypeError, match=re.escape('mundi process() function requests dataset \'n1192823\', but no dataset was defined on Mundi')):
         mundi.q(process_nothing)
 
 def test_mundi_q_inspect():
@@ -60,9 +61,9 @@ def test_mundi_q_inspect():
         'polygon': 'tests/fixtures/polygon.geojson',
         }), 'points', units='feet')
 
-    def correct_dataset(Q, point, points, polygon):
+    def correct_dataset(point, points, polygon):
         return dict()
-    def not_in_mundi(Q, point, not_in_mundi):
+    def not_in_mundi(point, not_in_mundi):
         return dict()
 
     mundi.q(correct_dataset)
@@ -76,8 +77,10 @@ def test_mundi_crs():
         'texas': 'tests/fixtures/texas_epsg_2844.geojson',
         }), 'points', units='feet')
 
-    def process_points(Q, point):
-        Q.plot(Q('texas').intersects(), 'texas')
+    def process_points(point, texas):
+        ints = texas.intersects(point)
+        if len(ints) > 0:
+            plot(ints, 'texas')
 
         return dict()
 
@@ -88,8 +91,8 @@ def test_no_pygeos():
         'neighborhoods': 'tests/fixtures/los-angeles.geojson',
         }), 'neighborhoods', units='feet')
 
-    def process_points(Q, neighborhood):
-        Q.plot(Q(), 'neighborhood')
+    def process_points(neighborhood):
+        plot(neighborhood, 'neighborhood')
 
         return dict()
 
