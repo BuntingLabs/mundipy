@@ -16,7 +16,7 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 
 from mundipy.map import Map
-from mundipy.layer import Dataset, LayerView, VisibleLayer
+from mundipy.layer import Dataset, LayerView
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
@@ -46,37 +46,6 @@ class MundiQ:
         if not isinstance(clip_distance, float) and not isinstance(clip_distance, int):
             raise TypeError('clip_distance to mundi.plot() must be float or int')
         self.clip_distance = clip_distance
-
-    """ Returns a VisibleLayer. """
-    def __call__(self, *args):
-        # variable length arguments
-        dataset = args[0] if len(args) > 0 else None
-
-        # Next, if dataset is in the pool, return the
-        # VisibleLayer
-        if dataset in self.mapdata.collections.keys():
-            return VisibleLayer(self.mapdata.collections[dataset], self.bbox(), self.center.geometry, pcs=self.pcs)
-
-        if dataset == 'openstreetmap' or dataset == 'osm':
-            # Take either a tuple, or a list of tuples
-            if len(args) <= 1:
-                raise TypeError('openstreetmap Q() takes at least two arguments')
-
-            # build bounding box in WGS84
-            p1, p2, p3, p4 = self.bbox()
-
-            gdf = grab_from_osm(tups=args[1], bbox=('%f,%f,%f,%f' % (p2, p1, p4, p3)))
-            # convert to local CRS, because grab_from_osm gives WGS84
-            return VisibleLayer(Layer(gdf), self.bbox(), self.center.geometry, pcs=self.pcs)
-
-        # this is an unknown dataset, throw a useful error
-        possible_datasets = list(self.mapdata.collections.keys()) + ['openstreetmap', 'osm']
-        similar_dataset_name = difflib.get_close_matches(dataset, possible_datasets, n=1)
-
-        if len(similar_dataset_name) == 0:
-            raise TypeError('Unknown dataset name %s was passed to Q()' % dataset)
-        else:
-            raise TypeError('Unknown dataset name %s was passed to Q(), did you mean %s?' % (dataset, possible_datasets[0]))
 
     def call_process(self, fn):
         # pass dataset as dataframe if requested
@@ -121,8 +90,6 @@ class MundiQ:
             shape = gpd.GeoSeries([shape.geometry])
         elif isinstance(shape, pd.Series) and isinstance(shape.geometry, gpd.GeoSeries):
             shape = shape.geometry
-        elif isinstance(shape, VisibleLayer):
-            shape = shape.local_collection
         else:
             raise TypeError('unexpected type passed to plot(), got %s' % type(shape))
 
