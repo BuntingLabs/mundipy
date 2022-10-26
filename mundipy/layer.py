@@ -22,7 +22,7 @@ from functools import lru_cache, partial
 import s2sphere
 
 from mundipy.cache import spatial_cache_footprint, pyproj_transform
-from mundipy.geometry import from_dataframe
+from mundipy.geometry import from_dataframe, from_row_series
 
 r = s2sphere.RegionCoverer()
 
@@ -218,6 +218,6 @@ class LayerView:
 			if len(gdf) > 0:
 				res = min(gdf.iterrows(), key=lambda row: geom.distance(row[1].geometry))
 
-				return res[1].geometry
+				return from_row_series(res[1])
 
 		return None

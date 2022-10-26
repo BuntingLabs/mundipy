@@ -14,6 +14,9 @@ def test_coffeeshops():
             if coffeeshop.intersects(neighborhood):
                 coffeeshop['neighborhood_name'] = neighborhood['name']
 
+        nearest_neighborhood = neighborhoods.nearest(coffeeshop)
+        assert isinstance(nearest_neighborhood['name'], str)
+
         return coffeeshop.features
 
     outs = mundi.q(process)
