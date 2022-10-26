@@ -142,10 +142,13 @@ class LayerView:
 	def intersects(self, geom):
 		if not isinstance(self.layer, Dataset):
 			raise TypeError('intersects() on not Dataset undefined')
+		if not isinstance(geom, BaseGeometry):
+			raise TypeError('geom is not a shapely.geometry')
 
 		# convert geom to EPSG:4326
 		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
-		bbox = transform(to_wgs, geom).bounds
+		# buffer a little bit to prevent point
+		bbox = transform(to_wgs, geom.buffer(1e-8)).bounds
 
 		potentially_intersecting_gdf = self.layer.inside_bbox(bbox, self.pcs)
 		return from_dataframe(potentially_intersecting_gdf[potentially_intersecting_gdf.intersects(geom)])
@@ -161,6 +164,8 @@ class LayerView:
 	def nearest(self, geom):
 		if not isinstance(self.layer, Dataset):
 			raise TypeError('intersects() on not Dataset undefined')
+		if not isinstance(geom, BaseGeometry):
+			raise TypeError('geom is not a shapely.geometry')
 
 		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
 
