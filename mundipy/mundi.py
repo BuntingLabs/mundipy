@@ -82,7 +82,7 @@ class MundiQ:
 
         # coerce shape into a GeoSeries, no matter what it is
         # shape can literally be anything
-        if isinstance(shape, Polygon) or isinstance(shape, MultiPolygon) or isinstance(shape, LineString):
+        if isinstance(shape, Point) or isinstance(shape, Polygon) or isinstance(shape, MultiPolygon) or isinstance(shape, LineString):
             shape = gpd.GeoSeries([shape])
         elif isinstance(shape, gpd.GeoDataFrame):
             shape = shape.geometry
@@ -102,7 +102,8 @@ class MundiQ:
             shape = gpd.clip(shape, mask=self._bbox(distance=self.clip_distance))
 
         # LineString and Point won't show up when plotted; buffer
-        shape = shape.apply(lambda g: g.buffer(2) if isinstance(g, LineString) or isinstance(g, Point) else g)
+        # 10 feet and meters should be, fine, i guess
+        shape = shape.apply(lambda g: g.buffer(10) if isinstance(g, LineString) or isinstance(g, Point) else g)
 
         # convert to WGS84
         shape = shape.set_crs(crs=self.pcs).to_crs(epsg=4326)
