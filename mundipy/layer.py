@@ -29,22 +29,19 @@ class Dataset:
 
 	def __init__(self, data):
 		self.filename = None
-		self._dataframe = None
 		self._db_url = None
 		self._db_table = None
 
 		self._conn = None
 
 		""" Initialize a Dataset from a data source. """
-		if isinstance(data, gpd.GeoDataFrame):
-			self._dataframe = data
-		elif isinstance(data, dict):
+		if isinstance(data, dict):
 			self._db_url = data['url']
 			self._db_table = data['table']
 		elif isinstance(data, str):
 			self.filename = data
 		else:
-			raise TypeError('data for Dataset() is not filename, GeoDataFrame or dict with PostgreSQL details')
+			raise TypeError('data for Dataset() is neither filename nor dict with PostgreSQL details')
 
 	@spatial_cache_footprint
 	def _load(self, bbox, pcs='EPSG:4326'):
@@ -56,9 +53,6 @@ class Dataset:
 
 		Returns the dataset in PCS coordinates.
 		"""
-		if self._dataframe is not None:
-			return (self._dataframe, None)
-
 		if self._db_url is not None:
 			# load from PostGIS
 			self._conn = create_engine(self._db_url)
@@ -139,6 +133,12 @@ class LayerView:
 	def __iter__(self):
 		yield from self.layer.geometry_collection(self.pcs)
 
+	"""
+	Returns an Iterator of mundipy geometries that intersect
+	with geom.
+
+	geom: inherits from shapely.geometry
+	"""
 	def intersects(self, geom):
 		if not isinstance(self.layer, Dataset):
 			raise TypeError('intersects() on not Dataset undefined')
@@ -149,6 +149,34 @@ class LayerView:
 
 		potentially_intersecting_gdf = self.layer.inside_bbox(bbox, self.pcs)
 		return from_dataframe(potentially_intersecting_gdf[potentially_intersecting_gdf.intersects(geom)])
+
+	"""
+	Returns the nearest feature in this collection to the passed
+	geometry.
+
+	Returns None if the dataset has no features.
+
+	geom: inherits from shapely.geometry
+	"""
+	def nearest(self, geom):
+		if not isinstance(self.layer, Dataset):
+			raise TypeError('intersects() on not Dataset undefined')
+
+		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
+
+		# increasing look outside of this bbox for the nearest item
+		buffer_distances = [1e0, 1e1, 1e2, 1e3, 1e4, 1e8]
+		for buffer_size in buffer_distances:
+			# buffer geom.bbox
+			bbox = transform(to_wgs, geom.buffer(buffer_size)).bounds
+
+			gdf = self.layer.inside_bbox(bbox, self.pcs)
+			if len(gdf) > 0:
+				res = min(gdf.iterrows(), key=lambda row: geom.distance(row[1].geometry))
+
+				return res[1].geometry
+
+		return None
 
 """VisibleLayer represents Layer data, as seen from a geometry."""
 class VisibleLayer:
