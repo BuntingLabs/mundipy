@@ -20,44 +20,10 @@ import pandas as pd
 from sqlalchemy import create_engine
 from functools import lru_cache, partial
 from cached_property import cached_property_with_ttl
-import s2sphere
 
 from mundipy.cache import (spatial_cache_footprint, pyproj_transform,
 	union_spatial_cache)
 from mundipy.geometry import from_dataframe, from_row_series
-
-r = s2sphere.RegionCoverer()
-
-class IntersectablePolygon:
-
-	def __init__(self, geom):
-		self.geom = geom
-
-	def may_intersect(self, cell):
-		# all that s2sphere requires to be implemented
-		shapely_cell = shapely.wkt.loads(s2_cell_to_wkt(cell))
-
-		return self.geom.intersects(shapely_cell)
-
-def s2_cell_to_wkt(cell):
-	vertices = [s2sphere.LatLng.from_point(cell.get_vertex(v)) for v in range(4)]
-
-	return "POLYGON ((%f %f, %f %f, %f %f, %f %f, %f %f))" % (
-		vertices[0].lng().degrees, vertices[0].lat().degrees,
-		vertices[1].lng().degrees, vertices[1].lat().degrees,
-		vertices[2].lng().degrees, vertices[2].lat().degrees,
-		vertices[3].lng().degrees, vertices[3].lat().degrees,
-		vertices[0].lng().degrees, vertices[0].lat().degrees,
-	)
-
-def tile_bbox(polygon):
-	s2_polygon = IntersectablePolygon(polygon)
-
-	pt = polygon.representative_point()
-	starting_point = s2sphere.LatLng.from_degrees(pt.y, pt.x)
-
-	# 14 is ~0.3km2 and 600m edge length
-	return r.get_simple_covering(s2_polygon, starting_point.to_point(), 14)
 
 class Dataset:
 	"""
@@ -115,27 +81,16 @@ class Dataset:
 				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
 				return gdf.to_crs(pcs)
 
-			cell_ids = list(tile_bbox(geom))
+			# load entire geometry
+			query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, geom.wkt)
 
-			tiles = [self._load_tile(cellid, pcs) for cellid in cell_ids]
-			together = pd.concat(tiles)
-			together_geo = gpd.GeoDataFrame(data=together, geometry='geometry', crs=pcs)
-
-			return together_geo
+			gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
+			return gdf.to_crs(pcs)
 
 		if geom is None:
 			return gpd.read_file(self.filename).to_crs(pcs)
 		else:
 			return gpd.read_file(self.filename, bbox=geom).to_crs(pcs)
-
-	@lru_cache(maxsize=512)
-	def _load_tile(self, cellid, pcs):
-		wkt = s2_cell_to_wkt(s2sphere.Cell(cellid))
-
-		query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, wkt)
-
-		gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
-		return gdf.to_crs(pcs)
 
 	@property
 	def dataframe(self):
@@ -218,7 +173,7 @@ class LayerView:
 		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
 
 		# increasing look outside of this bbox for the nearest item
-		buffer_distances = [1e0, 1e1, 1e2, 1e3, 1e4, 1e8]
+		buffer_distances = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8]
 		for buffer_size in buffer_distances:
 			# buffer geom.bbox
 			bbox = transform(to_wgs, geom.buffer(buffer_size)).bounds
@@ -228,5 +183,12 @@ class LayerView:
 				res = min(gdf.iterrows(), key=lambda row: geom.distance(row[1].geometry))
 
 				return from_row_series(res[1])
+
+		# fuck it, check the whole dataframe
+		gdf = self.layer.local_dataframe(self.pcs)
+		if len(gdf) > 0:
+			res = min(gdf.iterrows(), key=lambda row: geom.distance(row[1].geometry))
+
+			return from_row_series(res[1])
 
 		return None
