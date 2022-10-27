@@ -4,6 +4,7 @@ mundipy.cache provides spatial caches as function decorators.
 
 from functools import lru_cache
 import geopandas as gpd
+import pandas as pd
 from shapely.geometry.base import BaseGeometry
 import pyproj
 import inspect
@@ -14,7 +15,7 @@ def pyproj_transform(from_crs, to_crs):
     return pyproj.Transformer.from_crs(pyproj.CRS(from_crs),
         pyproj.CRS(to_crs), always_xy=True).transform
 
-def union_spatial_cache(fn):
+def union_spatial_cache(fn, maxsize=128):
 	"""
 	Cache this function based on area.
 
@@ -24,8 +25,67 @@ def union_spatial_cache(fn):
 	The function must return a geopandas.GeoDataFrame.
 	"""
 
+	# ((shape, pcs), df)
+	cache = []
+
 	def check_cache_first(*args, **kwargs):
-		return fn(*args, **kwargs)
+		nonlocal cache
+
+		if len(args) == 0:
+			raise TypeError('union_spatial_cache fn must be passed >= 1 argument')
+		geom = args[-1]
+		if geom is not None and not isinstance(geom, BaseGeometry):
+			raise TypeError('last argument to union_spatial_cache fn is neither None nor shapely.geometry')
+
+		# get pcs
+		pcs = kwargs['pcs'] if 'pcs' in kwargs else inspect.signature(fn).parameters['pcs'].default
+
+		# if no geometry, pass through
+		if geom is None:
+			return fn(*args, **kwargs)
+
+		# get all cache items that intersect and have same pcs
+		cached_dfs = filter(lambda c: c[0][0].intersects(geom) and c[0][1] == pcs, cache)
+		# sort by area
+		cached_dfs = list(sorted(cached_dfs, reverse=True, key=lambda c: c[0][0].area))
+
+		# find remaining area
+		remaining_area = geom
+		all_dfs = []
+		for details, df in cached_dfs:
+			cached_geom, _ = details
+
+			# if remaining_area covers cached_geom, we can put the entire DF
+			# in, saving intersection calculations
+			# get intersection
+			if remaining_area.covers(cached_geom):
+				all_dfs.append(df)
+			else:
+				# fraction of df will be relevant in intersected area
+				intersecting_area = cached_geom.intersection(remaining_area)
+				# skip if intersecting_area is negligible
+				if intersecting_area.area == 0.0:
+					continue
+
+				# get df in this area
+				intersecting_df = df[df.geometry.intersects(intersecting_area)]
+
+				all_dfs.append(intersecting_df)
+
+			# subtract from remaining
+			remaining_area = remaining_area.difference(cached_geom)
+
+		# add most recent result if necessary
+		if remaining_area.area > 0.0:
+			result = fn(*args[:-1], remaining_area, **kwargs)
+			all_dfs.append(result)
+
+			# re-order cache list to include the new hit
+			cache = [((geom, pcs), result)] + cache[:maxsize-1]
+
+		together = pd.concat(all_dfs)
+		# TODO drop duplicates
+		return gpd.GeoDataFrame(data=together, geometry='geometry', crs=pcs)
 
 	return check_cache_first
 
