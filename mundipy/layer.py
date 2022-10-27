@@ -28,16 +28,36 @@ from mundipy.geometry import from_dataframe, from_row_series
 
 r = s2sphere.RegionCoverer()
 
+class IntersectablePolygon:
+
+	def __init__(self, geom):
+		self.geom = geom
+
+	def may_intersect(self, cell):
+		# all that s2sphere requires to be implemented
+		shapely_cell = shapely.wkt.loads(s2_cell_to_wkt(cell))
+
+		return self.geom.intersects(shapely_cell)
+
+def s2_cell_to_wkt(cell):
+	vertices = [s2sphere.LatLng.from_point(cell.get_vertex(v)) for v in range(4)]
+
+	return "POLYGON ((%f %f, %f %f, %f %f, %f %f, %f %f))" % (
+		vertices[0].lng().degrees, vertices[0].lat().degrees,
+		vertices[1].lng().degrees, vertices[1].lat().degrees,
+		vertices[2].lng().degrees, vertices[2].lat().degrees,
+		vertices[3].lng().degrees, vertices[3].lat().degrees,
+		vertices[0].lng().degrees, vertices[0].lat().degrees,
+	)
+
 def tile_bbox(polygon):
-	bbox = polygon.bounds
+	s2_polygon = IntersectablePolygon(polygon)
 
-	p1 = s2sphere.LatLng.from_degrees(bbox[3], bbox[0])
-	p2 = s2sphere.LatLng.from_degrees(bbox[1], bbox[2])
-
-	rect = s2sphere.LatLngRect.from_point_pair(p1, p2)
+	pt = polygon.representative_point()
+	starting_point = s2sphere.LatLng.from_degrees(pt.y, pt.x)
 
 	# 14 is ~0.3km2 and 600m edge length
-	return r.get_simple_covering(rect, p1.to_point(), 14)
+	return r.get_simple_covering(s2_polygon, starting_point.to_point(), 14)
 
 class Dataset:
 	"""
@@ -110,16 +130,7 @@ class Dataset:
 
 	@lru_cache(maxsize=512)
 	def _load_tile(self, cellid, pcs):
-		vertices = [s2sphere.LatLng.from_point(s2sphere.Cell(cellid).get_vertex(v)) for v in range(4)]
-
-		wkt = "POLYGON ((%f %f, %f %f, %f %f, %f %f, %f %f))" % (
-			vertices[0].lng().degrees, vertices[0].lat().degrees,
-			vertices[1].lng().degrees, vertices[1].lat().degrees,
-			vertices[2].lng().degrees, vertices[2].lat().degrees,
-			vertices[3].lng().degrees, vertices[3].lat().degrees,
-			vertices[0].lng().degrees, vertices[0].lat().degrees,
-		)
-		# shapely.wkt.loads(wkt)
+		wkt = s2_cell_to_wkt(s2sphere.Cell(cellid))
 
 		query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, wkt)
 
