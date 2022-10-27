@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mundipy"
-version = "0.5.6"
+version = "0.5.7"
 description = "mundipy is a Python framework for spatial data analysis"
 authors = ["Brendan Ashworth <brendan@buntinglabs.com>"]
 license = "MIT"
