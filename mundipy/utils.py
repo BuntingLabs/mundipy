@@ -1,5 +1,7 @@
 from contextvars import ContextVar
 
+import pandas as pd
+
 _plot = ContextVar('mundipy_plot', default=None)
 
 def plot(*args, **kwargs):
@@ -13,9 +15,9 @@ def plot(*args, **kwargs):
 def sanitize_geo(value):
     """Sanitize a __geo_interface__ for dumping to JSON."""
     if isinstance(value, dict):
-        value = {sanitize(k): sanitize(v) for k, v in value.items()}
+        value = {sanitize_geo(k): sanitize_geo(v) for k, v in value.items()}
     elif isinstance(value, list):
-        value = [sanitize(v) for v in value]
+        value = [sanitize_geo(v) for v in value]
     elif isinstance(value, pd.Timestamp):
         value = str(value)
     return value

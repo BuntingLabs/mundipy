@@ -21,7 +21,7 @@ from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
 from mundipy.geometry import from_row_series
-from mundipy.utils import _plot
+from mundipy.utils import _plot, sanitize_geo
 
 class MundiQ:
     def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
@@ -154,8 +154,8 @@ class Mundi:
             # convert to dfs
             dfs = gpd.GeoDataFrame(data=Q.plot_contents, crs='EPSG:4326', columns=['geometry', 'fill'], geometry='geometry')
 
-            # 'http://geojson.io/#data=data:application/json,%s' % urllib.parse.quote(
-            return dfs.to_json()
+            # sanitize object before dumping to json
+            return json.dumps(sanitize_geo(dfs.__geo_interface__))
         elif output_type == 'matplotlib':
             ax.legend(handles=Q.plot_handles, loc='upper right')
             plt.show()
