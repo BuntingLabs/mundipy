@@ -9,3 +9,13 @@ def plot(*args, **kwargs):
 
     # pass onto actual plotting function in mundi.py
     return plot_fn(*args, **kwargs)
+
+def sanitize_geo(value):
+    """Sanitize a __geo_interface__ for dumping to JSON."""
+    if isinstance(value, dict):
+        value = {sanitize(k): sanitize(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        value = [sanitize(v) for v in value]
+    elif isinstance(value, pd.Timestamp):
+        value = str(value)
+    return value
