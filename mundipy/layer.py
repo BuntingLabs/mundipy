@@ -77,25 +77,25 @@ class Dataset:
 		return create_engine(self._db_url)
 
 	@union_spatial_cache
-	def _load(self, bbox, pcs='EPSG:4326'):
+	def _load(self, geom, pcs='EPSG:4326'):
 		"""
 		Load part or the entire Dataset as a dataframe.
 
-		Takes bbox as a 4-tuple of WGS84 coordinates (lon, lat). bbox can be
-		None to load the entire dataset.
+		Takes geom as a shapely.geometry, or None to load the
+		entire dataset.
 
 		Returns the dataset in PCS coordinates.
 		"""
 		if self._db_url is not None:
-			# no bbox
-			if bbox is None:
+			# no geom
+			if geom is None:
 				# build the query
 				query = "SELECT * FROM %s" % self._db_table
 
 				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
 				return gdf.to_crs(pcs)
 
-			cell_ids = list(tile_bbox(bbox))
+			cell_ids = list(tile_bbox(geom))
 
 			tiles = [self._load_tile(cellid, pcs) for cellid in cell_ids]
 			together = pd.concat(tiles)
@@ -103,10 +103,10 @@ class Dataset:
 
 			return together_geo
 
-		if bbox is None:
+		if geom is None:
 			return gpd.read_file(self.filename).to_crs(pcs)
 		else:
-			return gpd.read_file(self.filename, bbox=bbox).to_crs(pcs)
+			return gpd.read_file(self.filename, bbox=geom).to_crs(pcs)
 
 	@lru_cache(maxsize=512)
 	def _load_tile(self, cellid, pcs):
