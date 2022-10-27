@@ -22,7 +22,8 @@ from functools import lru_cache, partial
 from cached_property import cached_property_with_ttl
 import s2sphere
 
-from mundipy.cache import spatial_cache_footprint, pyproj_transform
+from mundipy.cache import (spatial_cache_footprint, pyproj_transform,
+	union_spatial_cache)
 from mundipy.geometry import from_dataframe, from_row_series
 
 r = s2sphere.RegionCoverer()
@@ -75,7 +76,7 @@ class Dataset:
 
 		return create_engine(self._db_url)
 
-	@spatial_cache_footprint
+	@union_spatial_cache
 	def _load(self, bbox, pcs='EPSG:4326'):
 		"""
 		Load part or the entire Dataset as a dataframe.
@@ -92,7 +93,7 @@ class Dataset:
 				query = "SELECT * FROM %s" % self._db_table
 
 				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
-				return (gdf.to_crs(pcs), None)
+				return gdf.to_crs(pcs)
 
 			cell_ids = list(tile_bbox(bbox))
 
@@ -100,17 +101,12 @@ class Dataset:
 			together = pd.concat(tiles)
 			together_geo = gpd.GeoDataFrame(data=together, geometry='geometry', crs=pcs)
 
-			# build footprint from cell_ids
-			# needs 5 points to have a box polygon
-			polygons = [[s2sphere.LatLng.from_point(s2sphere.Cell(cellid).get_vertex(v)) for v in [0, 1, 2, 3, 0]] for cellid in cell_ids]
-			polygons = [Polygon([Point(v.lng().degrees, v.lat().degrees) for v in polygon]) for polygon in polygons]
-
-			return (together_geo, MultiPolygon(polygons).buffer(0))
+			return together_geo
 
 		if bbox is None:
-			return (gpd.read_file(self.filename).to_crs(pcs), None)
+			return gpd.read_file(self.filename).to_crs(pcs)
 		else:
-			return (gpd.read_file(self.filename, bbox=bbox).to_crs(pcs), None)
+			return gpd.read_file(self.filename, bbox=bbox).to_crs(pcs)
 
 	@lru_cache(maxsize=512)
 	def _load_tile(self, cellid, pcs):

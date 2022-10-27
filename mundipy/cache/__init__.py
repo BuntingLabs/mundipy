@@ -14,6 +14,21 @@ def pyproj_transform(from_crs, to_crs):
     return pyproj.Transformer.from_crs(pyproj.CRS(from_crs),
         pyproj.CRS(to_crs), always_xy=True).transform
 
+def union_spatial_cache(fn):
+	"""
+	Cache this function based on area.
+
+	The function's only positional argument must be
+	either a shapely.geometry or None.
+
+	The function must return a geopandas.GeoDataFrame.
+	"""
+
+	def check_cache_first(*args, **kwargs):
+		return fn(*args, **kwargs)
+
+	return check_cache_first
+
 def spatial_cache_footprint(fn, maxsize=128):
 	"""
 	Cache this function for all geometries that fit within the returned
