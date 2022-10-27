@@ -90,6 +90,8 @@ class MundiQ:
             shape = gpd.GeoSeries([shape.geometry])
         elif isinstance(shape, pd.Series) and isinstance(shape.geometry, gpd.GeoSeries):
             shape = shape.geometry
+        elif isinstance(shape, list):
+            shape = gpd.GeoSeries(shape)
         else:
             raise TypeError('unexpected type passed to plot(), got %s' % type(shape))
 
