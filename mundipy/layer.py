@@ -19,6 +19,7 @@ import geopandas as gpd
 import pandas as pd
 from sqlalchemy import create_engine
 from functools import lru_cache, partial
+from cached_property import cached_property_with_ttl
 import s2sphere
 
 from mundipy.cache import spatial_cache_footprint, pyproj_transform
@@ -57,8 +58,6 @@ class Dataset:
 		self._db_url = None
 		self._db_table = None
 
-		self._conn = None
-
 		if isinstance(data, dict):
 			self._db_url = data['url']
 			self._db_table = data['table']
@@ -66,6 +65,15 @@ class Dataset:
 			self.filename = data
 		else:
 			raise TypeError('data for Dataset() is neither filename nor dict with PostgreSQL details')
+
+	@cached_property_with_ttl(ttl=10)
+	def _conn(self):
+		"""SQLAlchemy connection to the database, if _db_url is set"""
+
+		if self._db_url is None:
+			raise TypeError('Dataset._conn called when no _db_url was set')
+
+		return create_engine(self._db_url)
 
 	@spatial_cache_footprint
 	def _load(self, bbox, pcs='EPSG:4326'):
@@ -78,16 +86,12 @@ class Dataset:
 		Returns the dataset in PCS coordinates.
 		"""
 		if self._db_url is not None:
-			# load from PostGIS
-			self._conn = create_engine(self._db_url)
-
 			# no bbox
 			if bbox is None:
 				# build the query
 				query = "SELECT * FROM %s" % self._db_table
 
 				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
-				self._conn = None
 				return (gdf.to_crs(pcs), None)
 
 			cell_ids = list(tile_bbox(bbox))
@@ -95,8 +99,6 @@ class Dataset:
 			tiles = [self._load_tile(cellid, pcs) for cellid in cell_ids]
 			together = pd.concat(tiles)
 			together_geo = gpd.GeoDataFrame(data=together, geometry='geometry', crs=pcs)
-
-			self._conn = None
 
 			# build footprint from cell_ids
 			# needs 5 points to have a box polygon
