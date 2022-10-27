@@ -17,9 +17,14 @@ def pyproj_transform(from_crs, to_crs):
 
 def union_spatial_cache(fn, maxsize=128):
 	"""
-	Cache this function based on area.
+	This decorator caches a function based on area containment calculations.
+	For example, if a function returns a GeoDataFrame of objects that are
+	contained by an area, adding @union_spatial_cache will cache the results
+	based on area and PCS. Subsequent calls will use the cache to reduce
+	the area the function must be called on, and the decorator will join
+	the dataframes.
 
-	The function's only positional argument must be
+	The function's last positional argument must be
 	either a shapely.geometry or None.
 
 	The function must return a geopandas.GeoDataFrame.
