@@ -1,4 +1,5 @@
 from contextvars import ContextVar
+import math
 
 import pandas as pd
 
@@ -20,4 +21,6 @@ def sanitize_geo(value):
         value = [sanitize_geo(v) for v in value]
     elif isinstance(value, pd.Timestamp):
         value = str(value)
+    elif isinstance(value, float) and math.isnan(value):
+        value = None
     return value
