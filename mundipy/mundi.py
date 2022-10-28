@@ -20,19 +20,16 @@ from mundipy.layer import Dataset, LayerView
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
-from mundipy.geometry import from_row_series
+from mundipy.geometry import from_row_series, enrich_geom
 from mundipy.utils import _plot, sanitize_geo
 
 class MundiQ:
     def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
-        self.pcs = choose_pcs(box(*center.geometry.bounds), units=units)['crs']
+        self.pcs = choose_pcs(box(*center.bounds), units=units)['crs']
 
         # a row in a GeoDataFrame, with a column called .geometry
         # in local projected coordinate system
-        self.center = center
-
-        to_local = pyproj_transform('EPSG:4326', self.pcs)
-        self.center.geometry = transform(to_local, self.center.geometry)
+        self.center = center.transform('EPSG:4326', self.pcs)
 
         # GeoPool
         self.mapdata = mapdata
@@ -58,18 +55,16 @@ class MundiQ:
             except KeyError:
                 raise TypeError('mundi process() function requests dataset \'%s\', but no dataset was defined on Mundi' % arg)
 
-        center = from_row_series(self.center)
-
         # call fn with a relevant context
         ctx = copy_context()
         ctx.run(lambda: _plot.set(self.plot))
 
-        return ctx.run(fn, center, *df_args)
+        return ctx.run(fn, self.center, *df_args)
 
     def _bbox(self, distance=500):
         """Builds a bounding box around the center object in the local coordinate system."""
 
-        return self.center.geometry.buffer(distance)
+        return self.center.buffer(distance)
 
     def bbox(self, distance=500):
         """Builds a bounding box around the center object in WGS84."""
@@ -139,12 +134,12 @@ class Mundi:
         elif output_type == 'matplotlib':
             fig, ax = plt.subplots()
 
-        if element_index < 0 or element_index > len(self.main.dataframe):
+        if element_index < 0 or element_index > len(self.main.geometry_collection('EPSG:4326')):
             raise TypeError('element_index passed to plot() that was < 0 or > length of dataset')
 
         # TODO: drop duplicates, except it's very slow
         #.drop_duplicates(subset=['geometry'])
-        Q = MundiQ(self.main.dataframe.iloc[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units, clip_distance=clip_distance)
+        Q = MundiQ(self.main.geometry_collection('EPSG:4326')[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units, clip_distance=clip_distance)
         res = Q.call_process(fn)
 
         if output_type == 'geojson':
@@ -160,23 +155,22 @@ class Mundi:
     def q(self, fn, progressbar=False, n_start=None, n_end=None):
         # make iterator unique by geometry
         # TODO: drop duplicates, except it's very slow
-        unique_iterator = self.main.dataframe
+        unique_iterator = self.main.geometry_collection('EPSG:4326')
 
         res_keys = None
         res_shapely_col = 'geometry'
         res_outs = dict()
         # progressbar optional
-        finiter = list(unique_iterator.iterrows())[n_start:n_end]
+        finiter = list(enumerate(unique_iterator))[n_start:n_end]
 
         if progressbar:
             finiter = tqdm(finiter, total=len(finiter))
 
-        for idx, window in finiter:
-            # fn(Q) can edit window
-            original_shape = window.geometry
+        for idx, original_shape in finiter:
+            # TODO fn(Q) can edit window
 
             try:
-                Q = MundiQ(window, self.mapdata)
+                Q = MundiQ(original_shape, self.mapdata)
                 res = Q.call_process(fn)
             except NoProjectionFoundError:
                 continue

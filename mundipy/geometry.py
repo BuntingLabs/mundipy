@@ -2,8 +2,11 @@ import json
 
 import shapely.geometry as geom
 from shapely.geometry import shape
+from shapely.ops import transform
 import geopandas as gpd
 import pandas as pd
+
+from mundipy.cache import pyproj_transform
 
 class Point(geom.Point):
 
@@ -11,12 +14,17 @@ class Point(geom.Point):
 		super().__init__(geo)
 
 		self.features = features
+		self._geo = geo
 
 	def __getitem__(self, item):
 		return self.features[item]
 
 	def __setitem__(self, item, value):
 		self.features[item] = value
+
+	def transform(self, from_crs, to_crs):
+		transformer = pyproj_transform(from_crs, to_crs)
+		return enrich_geom(transform(transformer, self._geo), self.features)
 
 class LineString(geom.LineString):
 
@@ -24,12 +32,17 @@ class LineString(geom.LineString):
 		super().__init__(geo)
 
 		self.features = features
+		self._geo = geo
 
 	def __getitem__(self, item):
 		return self.features[item]
 
 	def __setitem__(self, item, value):
 		self.features[item] = value
+
+	def transform(self, from_crs, to_crs):
+		transformer = pyproj_transform(from_crs, to_crs)
+		return enrich_geom(transform(transformer, self._geo), self.features)
 
 class Polygon(geom.Polygon):
 
@@ -37,12 +50,17 @@ class Polygon(geom.Polygon):
 		super().__init__(geo)
 
 		self.features = features
+		self._geo = geo
 
 	def __getitem__(self, item):
 		return self.features[item]
 
 	def __setitem__(self, item, value):
 		self.features[item] = value
+
+	def transform(self, from_crs, to_crs):
+		transformer = pyproj_transform(from_crs, to_crs)
+		return enrich_geom(transform(transformer, self._geo), self.features)
 
 class MultiPolygon(geom.MultiPolygon):
 
@@ -50,12 +68,17 @@ class MultiPolygon(geom.MultiPolygon):
 		super().__init__(geo)
 
 		self.features = features
+		self._geo = geo
 
 	def __getitem__(self, item):
 		return self.features[item]
 
 	def __setitem__(self, item, value):
 		self.features[item] = value
+
+	def transform(self, from_crs, to_crs):
+		transformer = pyproj_transform(from_crs, to_crs)
+		return enrich_geom(transform(transformer, self._geo), self.features)
 
 def from_geojson(geojson: dict):
 	if geojson['type'] != 'FeatureCollection':
@@ -98,3 +121,21 @@ def from_row_series(row: pd.Series):
 
 def from_dataframe(gdf: gpd.GeoDataFrame):
 	return from_geojson(gdf.__geo_interface__)
+
+def enrich_geom(geo, features):
+	"""Enrich a shapely geometry with old features"""
+	if isinstance(geo, geom.Point):
+		return Point(geo, features)
+	elif isinstance(geo, geom.LineString):
+		return LineString(geo, features)
+	elif isinstance(geo, geom.Polygon):
+		return Polygon(geo, features)
+	elif isinstance(geo, geom.MultiPolygon):
+		return MultiPolygon(geo, features)
+	else:
+		raise TypeError('enrich_geom got %s, expected Point/LineString/Polygon/MultiPolygon' % str(type(geo)))
+
+
+
+
+

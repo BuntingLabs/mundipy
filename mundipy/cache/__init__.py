@@ -73,7 +73,7 @@ def union_spatial_cache(fn, maxsize=128):
 					continue
 
 				# get df in this area
-				intersecting_df = df[df.geometry.intersects(intersecting_area)]
+				intersecting_df = list(filter(lambda g: g.intersects(intersecting_area), df))
 
 				all_dfs.append(intersecting_df)
 
@@ -88,9 +88,8 @@ def union_spatial_cache(fn, maxsize=128):
 			# re-order cache list to include the new hit
 			cache = [((geom, pcs), result)] + cache[:maxsize-1]
 
-		together = pd.concat(all_dfs)
 		# TODO drop duplicates
-		return gpd.GeoDataFrame(data=together, geometry='geometry', crs=pcs)
+		return [item for sublist in all_dfs for item in sublist]
 
 	return check_cache_first
 

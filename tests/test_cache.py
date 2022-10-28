@@ -1,6 +1,7 @@
 
 from mundipy.pcs import choose_pcs
 from mundipy.cache import spatial_cache_footprint, union_spatial_cache
+from mundipy.geometry import from_dataframe
 from shapely.geometry import box, Point
 import geopandas as gpd
 import random
@@ -40,10 +41,10 @@ def test_union_cache():
         i += 1
         assert i <= 2
 
-        return random_df[random_df.intersects(geom)]
+        return from_dataframe(random_df[random_df.intersects(geom)])
 
     def uncached_fn(geom, pcs='EPSG:4326'):
-        return random_df[random_df.intersects(geom)]
+        return from_dataframe(random_df[random_df.intersects(geom)])
 
     assert len(uncached_fn(box(-20, -20, 20, 20))) == 1304
     assert len(uncached_fn(box(-10, -10, 10, 10))) == 346

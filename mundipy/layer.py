@@ -65,7 +65,7 @@ class Dataset:
 	@union_spatial_cache
 	def _load(self, geom, pcs='EPSG:4326'):
 		"""
-		Load part or the entire Dataset as a dataframe.
+		Load part or the entire Dataset as a list of mundipy geometries.
 
 		Takes geom as a shapely.geometry, or None to load the
 		entire dataset.
@@ -84,14 +84,14 @@ class Dataset:
 
 				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
 				gdf.set_geometry(gdf.geometry.apply(transformer), inplace=True, crs=pcs)
-				return gdf
+				return from_dataframe(gdf)
 
 			# load entire geometry
 			query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, geom.wkt)
 
 			gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
 			gdf.set_geometry(gdf.geometry.apply(transformer), inplace=True, crs=pcs)
-			return gdf
+			return from_dataframe(gdf)
 
 		if geom is None:
 			gdf = gpd.read_file(self.filename)
@@ -99,20 +99,11 @@ class Dataset:
 			gdf = gpd.read_file(self.filename, bbox=geom)
 
 		gdf.set_geometry(gdf.geometry.apply(transformer), inplace=True, crs=pcs)
-		return gdf
-
-	@property
-	def dataframe(self):
-		"""Load an entire Dataset as a dataframe."""
-		return self._load(None)
-
-	@lru_cache(maxsize=8)
-	def local_dataframe(self, pcs):
-		return self._load(None, pcs=pcs)
+		return from_dataframe(gdf)
 
 	@lru_cache(maxsize=8)
 	def geometry_collection(self, pcs):
-		return from_dataframe(self.local_dataframe(pcs))
+		return self._load(None, pcs=pcs)
 
 	"""Read into a Dataset at a specific geometry (WGS84)."""
 	def inside_bbox(self, bbox, pcs='EPSG:4326'):
@@ -162,8 +153,8 @@ class LayerView:
 		# buffer a little bit to prevent point
 		bbox = transform(to_wgs, geom.buffer(1e-8)).bounds
 
-		potentially_intersecting_gdf = self.layer.inside_bbox(bbox, self.pcs)
-		return from_dataframe(potentially_intersecting_gdf[potentially_intersecting_gdf.intersects(geom)])
+		potentially_intersecting = self.layer.inside_bbox(bbox, self.pcs)
+		return list(filter(lambda g: g.intersects(geom), potentially_intersecting))
 
 	def nearest(self, geom):
 		"""
@@ -187,17 +178,13 @@ class LayerView:
 			# buffer geom.bbox
 			bbox = transform(to_wgs, geom.buffer(buffer_size)).bounds
 
-			gdf = self.layer.inside_bbox(bbox, self.pcs)
-			if len(gdf) > 0:
-				res = min(gdf.iterrows(), key=lambda row: geom.distance(row[1].geometry))
-
-				return from_row_series(res[1])
+			items = self.layer.inside_bbox(bbox, self.pcs)
+			if len(items) > 0:
+				return min(items, key=lambda geo: geom.distance(geo))
 
 		# fuck it, check the whole dataframe
-		gdf = self.layer.local_dataframe(self.pcs)
-		if len(gdf) > 0:
-			res = min(gdf.iterrows(), key=lambda row: geom.distance(row[1].geometry))
-
-			return from_row_series(res[1])
+		items = self.layer.geometry_collection(self.pcs)
+		if len(items) > 0:
+			return min(items, key=lambda geo: geom.distance(geo))
 
 		return None
