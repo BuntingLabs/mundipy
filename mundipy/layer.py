@@ -73,33 +73,27 @@ class Dataset:
 		Returns the dataset in PCS coordinates.
 		"""
 
-		# convert from WGS84 to local PCS
-		transformer = partial(transform, pyproj_transform('EPSG:4326', pcs))
-
 		if self._db_url is not None:
 			# no geom
 			if geom is None:
 				# build the query
 				query = "SELECT * FROM %s" % self._db_table
 
-				gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
-				gdf.set_geometry(gdf.geometry.apply(transformer), inplace=True, crs=pcs)
-				return from_dataframe(gdf)
+				gdf = from_dataframe(gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326'))
+				return [geo.transform('EPSG:4326', pcs) for geo in gdf]
 
 			# load entire geometry
 			query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, geom.wkt)
 
-			gdf = gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326')
-			gdf.set_geometry(gdf.geometry.apply(transformer), inplace=True, crs=pcs)
-			return from_dataframe(gdf)
+			gdf = from_dataframe(gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326'))
+			return [geo.transform('EPSG:4326', pcs) for geo in gdf]
 
 		if geom is None:
 			gdf = gpd.read_file(self.filename)
 		else:
 			gdf = gpd.read_file(self.filename, bbox=geom)
 
-		gdf.set_geometry(gdf.geometry.apply(transformer), inplace=True, crs=pcs)
-		return from_dataframe(gdf)
+		return [geo.transform('EPSG:4326', pcs) for geo in from_dataframe(gdf)]
 
 	@lru_cache(maxsize=8)
 	def geometry_collection(self, pcs):
