@@ -95,9 +95,6 @@ class MundiQ:
         else:
             raise TypeError('unexpected type passed to plot(), got %s' % type(shape))
 
-        # fix self-intersections and such
-        shape = shape.buffer(0)
-
         # clip shape by bounding box
         # especially nearby roads make the plot unreadable
         if self.clip_distance > 0:
@@ -105,7 +102,7 @@ class MundiQ:
 
         # LineString and Point won't show up when plotted; buffer
         # 10 feet and meters should be, fine, i guess
-        shape = shape.apply(lambda g: g.buffer(10) if isinstance(g, LineString) or isinstance(g, Point) else g)
+        shape = shape.apply(lambda g: g.buffer(10) if isinstance(g, LineString) or isinstance(g, Point) else g.buffer(0))
 
         # convert to WGS84
         shape = shape.set_crs(crs=self.pcs).to_crs(epsg=4326)
