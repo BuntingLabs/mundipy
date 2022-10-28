@@ -14,16 +14,36 @@ must be loaded.
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import box, Point, Polygon, MultiPolygon
 import shapely.wkt
-from shapely.ops import transform
+import shapely.wkb
 import geopandas as gpd
-import pandas as pd
-from sqlalchemy import create_engine
+from shapely.ops import transform
 from functools import lru_cache, partial
 from cached_property import cached_property_with_ttl
+import psycopg
+from psycopg_pool import ConnectionPool
 
 from mundipy.cache import (spatial_cache_footprint, pyproj_transform,
 	union_spatial_cache)
-from mundipy.geometry import from_dataframe, from_row_series
+from mundipy.geometry import from_dataframe, from_row_series, enrich_geom
+
+def elements_from_cursor(cur):
+	# get column names
+	colnames = [desc[0] for desc in cur.description]
+
+	return [ element_from_tuple(tup, colnames) for tup in cur.fetchall() ]
+
+def element_from_tuple(tup, colnames):
+	features = dict()
+	geom = None
+
+	for i, val in enumerate(tup):
+		# comes as WKB encoded
+		if colnames[i] == 'geometry':
+			geom = shapely.wkb.loads(bytes.fromhex(val))
+		else:
+			features[colnames[i]] = val
+
+	return enrich_geom(geom, features)
 
 class Dataset:
 	"""
@@ -32,7 +52,7 @@ class Dataset:
 	from mundipy.layer import Dataset
 
 	src = Dataset({
- 		'url': 'postgresql://postgres@localhost:5432/postgres',
+		'url': 'postgresql://postgres@localhost:5432/postgres',
 		'table': 'table_name'
 	})
 
@@ -48,19 +68,12 @@ class Dataset:
 		if isinstance(data, dict):
 			self._db_url = data['url']
 			self._db_table = data['table']
+
+			self._pool = ConnectionPool(self._db_url)
 		elif isinstance(data, str):
 			self.filename = data
 		else:
 			raise TypeError('data for Dataset() is neither filename nor dict with PostgreSQL details')
-
-	@cached_property_with_ttl(ttl=10)
-	def _conn(self):
-		"""SQLAlchemy connection to the database, if _db_url is set"""
-
-		if self._db_url is None:
-			raise TypeError('Dataset._conn called when no _db_url was set')
-
-		return create_engine(self._db_url)
 
 	@union_spatial_cache
 	def _load(self, geom, pcs='EPSG:4326'):
@@ -74,19 +87,19 @@ class Dataset:
 		"""
 
 		if self._db_url is not None:
-			# no geom
-			if geom is None:
-				# build the query
-				query = "SELECT * FROM %s" % self._db_table
+			with self._pool.connection() as conn:
+				cur = conn.execute("SELECT * FROM %s" % self._db_table)
 
-				gdf = from_dataframe(gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326'))
-				return [geo.transform('EPSG:4326', pcs) for geo in gdf]
+				# no geom
+				if geom is None:
+					# build the query
+					query = "SELECT * FROM %s" % self._db_table
+				else:
+					# load entire geometry
+					query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, geom.wkt)
 
-			# load entire geometry
-			query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, geom.wkt)
-
-			gdf = from_dataframe(gpd.GeoDataFrame.from_postgis(query, self._conn, geom_col='geometry', crs='EPSG:4326'))
-			return [geo.transform('EPSG:4326', pcs) for geo in gdf]
+				elements = elements_from_cursor(conn.execute(query))
+				return [geo.transform('EPSG:4326', pcs) for geo in elements]
 
 		if geom is None:
 			gdf = gpd.read_file(self.filename)
@@ -132,10 +145,10 @@ class LayerView:
 
 		`geom` - inherits from `shapely.geometry`
 
-        from mundipy.utils import plot
+		from mundipy.utils import plot
 
-        for feat in layer.intersects(Point(-37.0, 42.1)):
-            plot(feat)
+		for feat in layer.intersects(Point(-37.0, 42.1)):
+			plot(feat)
 		"""
 		if not isinstance(self.layer, Dataset):
 			raise TypeError('intersects() on not Dataset undefined')

@@ -21,7 +21,6 @@ exclude = ["example.py"]
 python = "^3.8"
 tqdm = "^4.64.1"
 geopandas = "^0.11.1"
-pandas = "^1.5.0"
 Shapely = "^1.8.4"
 Fiona = "^1.8.21"
 pyproj = "^3.4.0"
@@ -33,6 +32,8 @@ SQLAlchemy = "^1.4.40"
 s2sphere = "^0.2.5"
 fiona = "^1.8.21"
 cached-property = "^1.5.2"
+psycopg = "^3.0.16"
+psycopg-binary = "^3.0.16"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.3"

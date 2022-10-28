@@ -3,8 +3,6 @@ mundipy.cache provides spatial caches as function decorators.
 """
 
 from functools import lru_cache
-import geopandas as gpd
-import pandas as pd
 from shapely.geometry.base import BaseGeometry
 import pyproj
 import inspect
@@ -18,16 +16,16 @@ def pyproj_transform(from_crs, to_crs):
 def union_spatial_cache(fn, maxsize=128):
 	"""
 	This decorator caches a function based on area containment calculations.
-	For example, if a function returns a GeoDataFrame of objects that are
+	For example, if a function returns geometries of objects that are
 	contained by an area, adding @union_spatial_cache will cache the results
 	based on area and PCS. Subsequent calls will use the cache to reduce
 	the area the function must be called on, and the decorator will join
-	the dataframes.
+	the arrays.
 
 	The function's last positional argument must be
 	either a shapely.geometry or None.
 
-	The function must return a geopandas.GeoDataFrame.
+	The function must return an array of mundipy geometries.
 	"""
 
 	# ((shape, pcs), df)

@@ -7,7 +7,6 @@ from contextvars import copy_context
 import fiona
 from tqdm import tqdm
 import geopandas as gpd
-import pandas as pd
 from shapely.ops import transform
 from shapely.geometry import Polygon, MultiPolygon, LineString, Point, box
 from shapely.geometry.base import BaseGeometry
@@ -21,7 +20,7 @@ from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
 from mundipy.geometry import from_row_series, enrich_geom
-from mundipy.utils import _plot, sanitize_geo
+from mundipy.utils import _plot
 
 class MundiQ:
     def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
@@ -80,10 +79,6 @@ class MundiQ:
         if isinstance(shape, Point) or isinstance(shape, Polygon) or isinstance(shape, MultiPolygon) or isinstance(shape, LineString):
             shape = gpd.GeoSeries([shape])
         elif isinstance(shape, gpd.GeoDataFrame):
-            shape = shape.geometry
-        elif isinstance(shape, pd.Series) and isinstance(shape.geometry, BaseGeometry):
-            shape = gpd.GeoSeries([shape.geometry])
-        elif isinstance(shape, pd.Series) and isinstance(shape.geometry, gpd.GeoSeries):
             shape = shape.geometry
         elif isinstance(shape, list):
             shape = gpd.GeoSeries(shape)
@@ -147,7 +142,7 @@ class Mundi:
             dfs = gpd.GeoDataFrame(data=Q.plot_contents, crs='EPSG:4326', columns=['geometry', 'fill'], geometry='geometry')
 
             # sanitize object before dumping to json
-            return json.dumps(sanitize_geo(dfs.__geo_interface__))
+            return json.dumps(dfs.__geo_interface__)
         elif output_type == 'matplotlib':
             ax.legend(handles=Q.plot_handles, loc='upper right')
             plt.show()
