@@ -11,6 +11,7 @@ from tqdm import tqdm
 import geopandas as gpd
 from shapely.ops import transform
 from shapely.geometry import Polygon, MultiPolygon, LineString, Point, box
+from shapely.geometry.collection import GeometryCollection
 from shapely.geometry.base import BaseGeometry
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -140,11 +141,17 @@ class Mundi:
         res = Q.call_process(fn)
 
         if output_type == 'geojson':
-            # convert to dfs
-            dfs = gpd.GeoDataFrame(data=Q.plot_contents, crs='EPSG:4326', columns=['geometry', 'fill'], geometry='geometry')
+            # merge geometries into one
+            geom_col = GeometryCollection([r[0] for r in Q.plot_contents])
 
-            # sanitize object before dumping to json
-            return json.dumps(dfs.__geo_interface__)
+            return json.dumps({
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "GeometryCollection",
+                    "geometries": geom_col.__geo_interface__['geometries'],
+                    "properties": { k: v for (k, v) in res.items() if not isinstance(v, BaseGeometry)}
+                }]
+            })
         elif output_type == 'matplotlib':
             ax.legend(handles=Q.plot_handles, loc='upper right')
             plt.show()
