@@ -1,8 +1,10 @@
 import json
 import urllib.parse
+import io
 import difflib
 import inspect
 from contextvars import copy_context
+from contextlib import redirect_stdout
 
 import fiona
 from tqdm import tqdm
@@ -164,9 +166,16 @@ class Mundi:
         for idx, original_shape in finiter:
             # TODO fn(Q) can edit window
 
+            user_printed = None
+
             try:
                 Q = MundiQ(original_shape, self.mapdata)
-                res = Q.call_process(fn)
+
+                # capture stdout
+                with redirect_stdout(io.StringIO()) as f:
+                    res = Q.call_process(fn)
+                user_printed = f.getvalue()
+                
             except NoProjectionFoundError:
                 continue
 
@@ -178,6 +187,8 @@ class Mundi:
             if not isinstance(res, dict):
                 raise TypeError('function passed to mundi.q() must return dict or None but instead got %s' % type(res).__name__)
 
+            # type check that keys are always the same
+            # ignores _stdout and _id
             if res_keys is None:
                 res_keys = res.keys()
 
@@ -189,6 +200,9 @@ class Mundi:
 
                 if res_shapely_col == 'geometry':
                     res_outs['geometry'] = []
+
+                # internal columns
+                res_outs['_stdout'] = []
             elif res_keys != res.keys():
                 raise TypeError('function passed to mundi.q() returned dict with different keys')
 
@@ -206,6 +220,8 @@ class Mundi:
 
             if res_shapely_col == 'geometry':
                 res_outs['geometry'].append(original_shape)
+
+            res_outs['_stdout'].append(user_printed)
 
         # if res_outs is empty, give a useful error message
         # creating a GeoDataFrame with an empty array gives an error

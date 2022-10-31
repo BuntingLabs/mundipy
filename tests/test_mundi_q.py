@@ -13,6 +13,8 @@ def test_mundi_q():
     def process(point, polygon):
         larger = polygon.intersects(point)
 
+        print('should capture')
+
         return {
             'center': larger is None
         }
@@ -20,6 +22,7 @@ def test_mundi_q():
     outs = mundi.q(process)
 
     assert len(outs) == 3
+    assert len(outs['_stdout']) == 3
 
 def test_mundi_q_n():
     mundi = Mundi(Map({
