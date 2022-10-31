@@ -203,6 +203,7 @@ class Mundi:
 
                 # internal columns
                 res_outs['_stdout'] = []
+                res_outs['_id'] = []
             elif res_keys != res.keys():
                 raise TypeError('function passed to mundi.q() returned dict with different keys')
 
@@ -222,6 +223,7 @@ class Mundi:
                 res_outs['geometry'].append(original_shape)
 
             res_outs['_stdout'].append(user_printed)
+            res_outs['_id'].append(idx)
 
         # if res_outs is empty, give a useful error message
         # creating a GeoDataFrame with an empty array gives an error

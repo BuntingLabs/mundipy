@@ -23,6 +23,7 @@ def test_mundi_q():
 
     assert len(outs) == 3
     assert len(outs['_stdout']) == 3
+    assert len(outs['_id']) == 3
 
 def test_mundi_q_n():
     mundi = Mundi(Map({
