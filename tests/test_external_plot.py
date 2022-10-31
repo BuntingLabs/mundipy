@@ -18,7 +18,11 @@ def test_plot_context():
 
     outs = mundi.plot(process, output_type='geojson')
     # should verify output because it doesn't look right
-    assert len(outs) > 2
+    assert isinstance(outs, str)
+    plotted = json.loads(outs)
+
+    assert len(plotted['features']) == 1
+    assert len(plotted['features'][0]['geometries']) == 0
 
 def test_plot_point():
     mundi = Mundi(Map({
@@ -32,7 +36,11 @@ def test_plot_point():
         return coffeeshop.features
 
     outs = mundi.plot(process, output_type='geojson', clip_distance=0)
-    assert len(json.loads(outs)['features']) == 2
+
+    plotted = json.loads(outs)
+
+    assert len(plotted['features']) == 1
+    assert len(plotted['features'][0]['geometries']) == 2
 
 def test_plot_nocontext():
     with pytest.raises(TypeError, match=re.escape('mundipy.utils.plot() called outside of process fn')):
