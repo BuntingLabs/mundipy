@@ -138,7 +138,12 @@ class Mundi:
         # TODO: drop duplicates, except it's very slow
         #.drop_duplicates(subset=['geometry'])
         Q = MundiQ(self.main.geometry_collection('EPSG:4326')[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units, clip_distance=clip_distance)
-        res = Q.call_process(fn)
+
+        with redirect_stdout(io.StringIO()) as f:
+            res = Q.call_process(fn)
+        # add stdout
+        res['_stdout'] = f.getvalue()
+        res['_id'] = element_index
 
         if output_type == 'geojson':
             # merge geometries into one
@@ -149,7 +154,7 @@ class Mundi:
                 "features": [{
                     "type": "GeometryCollection",
                     "geometries": geom_col.__geo_interface__['geometries'],
-                    "properties": { k: v for (k, v) in res.items() if not isinstance(v, BaseGeometry)}
+                    "properties": { k: (int(v) if isinstance(v, int) else (float(v) if isinstance(v, float) else str(v))) for (k, v) in res.items() if not isinstance(v, BaseGeometry)}
                 }]
             })
         elif output_type == 'matplotlib':
