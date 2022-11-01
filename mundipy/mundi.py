@@ -150,13 +150,11 @@ class Mundi:
             geom_col = GeometryCollection([r[0] for r in Q.plot_contents])
 
             return json.dumps({
-                "type": "FeatureCollection",
-                "features": [{
-                    "type": "GeometryCollection",
-                    "geometries": geom_col.__geo_interface__['geometries'],
-                    "properties": { k: (int(v) if isinstance(v, int) else (float(v) if isinstance(v, float) else str(v))) for (k, v) in res.items() if not isinstance(v, BaseGeometry)}
-                }]
+                "type": "GeometryCollection",
+                "geometries": geom_col.__geo_interface__['geometries'],
+                "properties": { k: (int(v) if isinstance(v, int) else (float(v) if isinstance(v, float) else str(v))) for (k, v) in res.items() if not isinstance(v, BaseGeometry)}
             })
+
         elif output_type == 'matplotlib':
             ax.legend(handles=Q.plot_handles, loc='upper right')
             plt.show()
