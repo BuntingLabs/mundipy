@@ -27,7 +27,7 @@ import mundipy.geometry as geom
 from mundipy.utils import _plot
 
 class MundiQ:
-    def __init__(self, center, mapdata, plot_target=None, units='meters', clip_distance=500):
+    def __init__(self, center, mapdata, plot_target=None, units='meters'):
         self.pcs = choose_pcs(box(*center.bounds), units=units)['crs']
 
         # a row in a GeoDataFrame, with a column called .geometry
@@ -42,10 +42,6 @@ class MundiQ:
         self.plot_legend = dict()
         self.plot_handles = []
         self.plot_contents = []
-
-        if not isinstance(clip_distance, float) and not isinstance(clip_distance, int):
-            raise TypeError('clip_distance to mundi.plot() must be float or int')
-        self.clip_distance = clip_distance
 
     def call_process(self, fn):
         # pass dataset as dataframe if requested
@@ -93,11 +89,6 @@ class MundiQ:
         else:
             raise TypeError('unexpected type passed to plot(), got %s' % type(shape))
 
-        # clip shape by bounding box
-        # especially nearby roads make the plot unreadable
-        if self.clip_distance > 0:
-            shape = gpd.clip(shape, mask=self._bbox(distance=self.clip_distance))
-
         # fix shapes
         shape = shape.apply(lambda g: g.buffer(0) if isinstance(g, Polygon) or isinstance(g, MultiPolygon) else g)
 
@@ -130,7 +121,7 @@ class Mundi:
             raise TypeError('units passed to Mundi() was neither meters nor feet')
         self.units = units
 
-    def plot(self, fn, element_index=0, clip_distance=500, output_type='matplotlib'):
+    def plot(self, fn, element_index=0, output_type='matplotlib'):
         if output_type == 'geojson':
             pass
         elif output_type == 'matplotlib':
@@ -141,7 +132,7 @@ class Mundi:
 
         # TODO: drop duplicates, except it's very slow
         #.drop_duplicates(subset=['geometry'])
-        Q = MundiQ(self.main.geometry_collection('EPSG:4326')[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units, clip_distance=clip_distance)
+        Q = MundiQ(self.main.geometry_collection('EPSG:4326')[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units)
 
         with redirect_stdout(io.StringIO()) as f:
             res = Q.call_process(fn)
