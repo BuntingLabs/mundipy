@@ -23,6 +23,7 @@ from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
 from mundipy.geometry import from_row_series, enrich_geom
+import mundipy.geometry as geom
 from mundipy.utils import _plot
 
 class MundiQ:
@@ -80,6 +81,10 @@ class MundiQ:
         # coerce shape into a GeoSeries, no matter what it is
         # shape can literally be anything
         if isinstance(shape, Point) or isinstance(shape, Polygon) or isinstance(shape, MultiPolygon) or isinstance(shape, LineString):
+            # convert from our geom first
+            if isinstance(shape, geom.Point) or isinstance(shape, geom.LineString):
+                shape = shape._geo
+
             shape = gpd.GeoSeries([shape])
         elif isinstance(shape, gpd.GeoDataFrame):
             shape = shape.geometry

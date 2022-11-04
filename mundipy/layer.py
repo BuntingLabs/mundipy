@@ -69,7 +69,8 @@ class Dataset:
 			self._db_url = data['url']
 			self._db_table = data['table']
 
-			self._pool = ConnectionPool(self._db_url)
+			# 3 second timeout
+			self._pool = ConnectionPool(self._db_url, timeout=3.0)
 		elif isinstance(data, str):
 			self.filename = data
 		else:
