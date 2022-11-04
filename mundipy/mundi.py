@@ -93,9 +93,8 @@ class MundiQ:
         if self.clip_distance > 0:
             shape = gpd.clip(shape, mask=self._bbox(distance=self.clip_distance))
 
-        # LineString and Point won't show up when plotted; buffer
-        # 10 feet and meters should be, fine, i guess
-        shape = shape.apply(lambda g: g.buffer(10) if isinstance(g, LineString) or isinstance(g, Point) else g.buffer(0))
+        # fix shapes
+        shape = shape.apply(lambda g: g.buffer(0) if isinstance(g, Polygon) or isinstance(g, MultiPolygon) else g)
 
         # convert to WGS84
         shape = shape.set_crs(crs=self.pcs).to_crs(epsg=4326)
@@ -141,6 +140,13 @@ class Mundi:
 
         with redirect_stdout(io.StringIO()) as f:
             res = Q.call_process(fn)
+
+        # function passed to .q() can return None
+        # for .q(), we skip it
+        # gracefully handle None as plot with no features
+        if res is None:
+            res = dict()
+
         # add stdout
         res['_stdout'] = f.getvalue()
         res['_id'] = element_index

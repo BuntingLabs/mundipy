@@ -21,8 +21,7 @@ def test_plot_context():
     assert isinstance(outs, str)
     plotted = json.loads(outs)
 
-    assert len(plotted['features']) == 1
-    assert len(plotted['features'][0]['geometries']) == 0
+    assert len(plotted['geometries']) == 0
 
 def test_plot_point():
     mundi = Mundi(Map({
@@ -39,8 +38,7 @@ def test_plot_point():
 
     plotted = json.loads(outs)
 
-    assert len(plotted['features']) == 1
-    assert len(plotted['features'][0]['geometries']) == 2
+    assert len(plotted['geometries']) == 2
 
 def test_plot_nocontext():
     with pytest.raises(TypeError, match=re.escape('mundipy.utils.plot() called outside of process fn')):
