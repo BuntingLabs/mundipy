@@ -1,0 +1,63 @@
+---
+title: "Geometric Operations"
+description: "Using shapely operations inside mundi.py"
+---
+
+<Tip>This page features the most popular geometric operations, but far more are available. A full list of shapely operations can be found in the [shapely user manual](https://shapely.readthedocs.io/en/stable/manual.html).</Tip>
+
+## Common Shapely Operations
+
+### Boolean operations
+
+These shapely operations can be used in conditionals.
+
+<AccordionGroup>
+  <Accordion title="object.almost_equals(other)" icon="tilde">
+  	Returns `True` if the object is approximately equal to the other at all points to specified decimal place precision.
+  </Accordion>
+  <Accordion title="object.contains(other)" icon="border-outer"></Accordion>
+  <Accordion title="object.intersects(other)" icon="diagram-venn"></Accordion>
+  <Accordion title="object.overlaps(other)" icon="diagram-venn"></Accordion>
+</AccordionGroup>
+
+### Shape generators
+
+These methods create a new shapely geometry based on the relationship between
+the passed geometries.
+
+<AccordionGroup>
+  <Accordion title="object.difference(other)" icon="object-subtract"></Accordion>
+  <Accordion title="object.intersection(other)" icon="object-intersect"></Accordion>
+  <Accordion title="object.symmetric_difference(other)" icon="object-exclude"></Accordion>
+  <Accordion title="object.union(other)" icon="object-union"></Accordion>
+</AccordionGroup>
+
+### Shape modifiers
+
+These methods return a modified version of `object` after a transformation.
+
+<AccordionGroup>
+  <Accordion title="object.buffer(size)" icon="maximize"></Accordion>
+  <Accordion title="object.simplify(tolerance)" icon="object-intersect"></Accordion>
+</AccordionGroup>
+
+### Properties
+
+These properties are defined on all shapely geometries.
+
+<AccordionGroup>
+  <Accordion title="object.boundary" icon="border-outer"></Accordion>
+  <Accordion title="object.centroid" icon="location-pin"></Accordion>
+  <Accordion title="object.envelope" icon="send-backward"></Accordion>
+  <Accordion title="object.area" icon="border-outer"></Accordion>
+  <Accordion title="object.bounds" icon="rectangle"></Accordion>
+  <Accordion title="object.length" icon="ruler"></Accordion>
+</AccordionGroup>
+
+### Methods
+
+Calculate a result based on two geometries.
+
+<AccordionGroup>
+  <Accordion title="object.distance(other)" icon="arrows-up-down"></Accordion>
+</AccordionGroup>

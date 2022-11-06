@@ -1,0 +1,41 @@
+---
+title: "Loading Datasets"
+description: "Load spatial datasets from vector files or PostGIS"
+---
+
+Mundi.py is built on top of [GDAL](https://gdal.org/), so most vector file formats
+are supported. Additionally, datasets can be loaded directly from PostGIS.
+
+When a dataset is instantiated, it won't automatically be loaded into memory. Data
+is lazy loaded only when useful and cleared from the cache when not needed.
+
+## Supported sources
+
+### Vector files
+
+Passing a filename as the first argument loads a vector file from disk:
+
+```py
+from mundipy.layer import Dataset
+
+ds = Dataset('colorado_trails.shp')
+
+print('Loaded %d trails', len(ds))
+# -> Loaded 308 trails
+```
+
+### PostGIS table
+
+To download from a PostGIS table, pass the connection URL along with the table name:
+
+```py
+from mundipy.layer import Dataset
+
+ds = Dataset({
+    'url': "postgresql://postgres@localhost:5432/postgres",
+    'table': 'nyc_boroughs'
+})
+
+print('Loaded %d boroughs', len(ds))
+# -> Loaded 5 boroughs
+```

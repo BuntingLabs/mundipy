@@ -64,21 +64,22 @@ For our analysis, we'll associate every restaurant in New York with its borough.
 We'll define a lambda function that runs our analysis on one restaurant.
 
 ```python
-def process_restaurant(Q):
-	# pull the primary table element
-	restaurant = Q()
-	Q.plot(restaurant, 'restaurant')
+from mundipy.utils import plot
 
-	# find the intersecting borough
-	intersecting_boroughs = Q('boroughs').intersects()
-	Q.plot(intersecting_boroughs, 'boroughs')
+def process_restaurant(restaurant, boroughs):
+	# plot the primary table element
+	plot(restaurant, 'restaurant')
+
+	# find the intersecting boroughs
+	intersecting_boroughs = boroughs.intersects(restaurant)
+	plot(intersecting_boroughs, 'boroughs')
 
 	# if there are no boroughs, returning None will skip
 	if len(intersecting_boroughs) == 0:
 		return None
 
 	return {
-		'borough': intersecting_boroughs['boro_name'].values[0]
+		'borough': intersecting_boroughs[0]['boro_name']
 	}
 ```
 

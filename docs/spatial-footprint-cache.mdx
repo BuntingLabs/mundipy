@@ -1,14 +1,15 @@
 ---
-title: "Spatial LRU Cache"
-description: "Cache the results of expensive spatial lookups with a spatial LRU cache."
+title: "Spatial Footprint Cache"
+description: "Cache the results of expensive spatial queries with a spatial LRU cache."
 ---
 
-Caching the results of expensive lookups, like API calls or compute-heavy functions on DataFrames, can dramatically speed up the execution of a spatial program. In Python, adding the `functools.lru_cache` decorator to an existing function makes caching convenient by wrapping a function and hashing its arguments.
+<Accordion title="What's a footprint?" icon="vector-polygon">
+  If a spatial query result is constant for an entire region, that result's *footprint* is the region. For example, a country query by point can be cached with the country's border as the *footprint*.
+</Accordion>
 
-This library provides a spatial LRU (drops the least-recently used) cache that can be easily integrated into an existing spatial query. There are two types of spatial caches offered:
+Caching the results of expensive queries, like API calls or compute-heavy functions on DataFrames, can dramatically speed up the execution of a spatial program. In Python, adding the `functools.lru_cache` decorator to an existing function makes caching convenient by wrapping a function and hashing its arguments.
 
-1. Footprint spatial cache
-2. Union spatial cache
+This library provides a variety of spatial LRU (drops the least-recently used) cache that can be easily integrated into an existing spatial query.
 
 ## Spatial footprint cache
 
@@ -56,12 +57,3 @@ Statistics about cache hits or misses can be shown with `fn.cache_info`:
 print(fn.cache_info)
 # {'hits': 1, 'misses': 3}
 ```
-
-## Union spatial cache
-
-The union spatial cache allows for dynamic programming, where a large areal query can be broken down into smaller subqueries, each of which can be cached. After subdividing the query, we can take a union of the results to return to the original query.
-
-This is especially useful when we break down queries into an orderly subquery structure. For our implementation of the union spatial cache, we tile query areas into S2 cells, and cache these subqueries.
-
-Documentation is forthcoming.
-

@@ -1,0 +1,68 @@
+---
+title: "Projection API"
+description: "Get suggested projections from geometries."
+---
+
+## Projection API
+
+### Selection Algorithm
+
+<Note>We use the [EPSG Geodetic Parameter Dataset](https://epsg.org/home.html) for selecting a PCS.</Note>
+
+Choosing a relevant PCS for a given operation must take into consideration the needs of the application.
+
+The selection algorithm prioritizes the following:
+
+1. The units along both axes must match the given units (either feet or meters)
+2. The area of the PCS must wholly contain the shape
+3. Given the above, the PCS with the smallest area is chosen
+
+PCS with smaller areas likely have lower distortion.
+
+### Choosing a PCS
+
+Using the `mundipy.pcs` library, we can choose a reasonable PCS, given any `shapely` geometry with WGS84 coordinates (ordered: longitude, latitude).
+
+```python choose_pcs.py
+from mundipy.pcs import choose_pcs
+from shapely.geometry import Point
+
+choose_pcs(Point(-118.24, 34.052), units='feet')
+# {
+#     'name': 'NAD27 / California zone VII',
+#     'epsg': 26799,
+#     'crs': 'EPSG:26799',
+#     'units': 'feet'
+# }
+```
+
+### Suggest multiple PCS's
+
+We can also suggest multiple projections with `suggest_pcs`:
+
+```python suggest_pcs.py
+from mundipy.pcs import suggest_pcs
+from shapely.geometry import Point
+
+suggest_pcs(Point(3.36, 52.54), units='meters', n=2)
+# [{
+#     "name": "ED50 / TM 5 NE",
+#     "epsg": 23095,
+#     "crs": "EPSG:23095",
+#     "units": "meters"
+# },
+# {
+#     "name": "ED50 / UTM zone 31N",
+#     "epsg": 23031,
+#     "crs": "EPSG:23031",
+#     "units": "meters"
+# }]
+```
+
+### Creating a `pyproj.CRS`
+
+To manage your coordinate reference system manually, we recommend using `pyproj`.
+
+```python
+pyproj.CRS('EPSG:23095')
+```

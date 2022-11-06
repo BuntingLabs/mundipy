@@ -1,0 +1,51 @@
+---
+title: "Querying Datasets"
+description: "Getting a subset of a dataset without loading everything"
+---
+
+If a [loaded dataset](/loading-datasets) is from PostGIS or is a Shapefile or FlatGeobuf,
+we can use the spatial index to query a subset of the data.
+
+<Tip>Converting other vector file formats [to FlatGeobuf with ogr2ogr](https://buntinglabs.com/tools/ogr2ogr-command-builder) results in significant performance improvements.</Tip>
+
+## Queries
+
+### intersects()
+
+`Dataset.intersects(geom)`
+
+
+Returns a list of geometries that intersect with the passed `geom`.
+
+### nearest()
+
+`Dataset.nearest(geom)`
+
+Returns the nearest geometry in the dataset to `geom`. If the dataset
+is empty, this will return `None`.
+
+## Example
+
+For example, if we're working with a dataset of farms, loaded here
+in [FlatGeobuf](https://flatgeobuf.org/) format, we can quickly
+find all the farms that intersect with a particular geometry.
+
+```python
+from mundipy.layer import Dataset
+from shapely.geometry import box
+
+mundi = Mundi(Map({
+    'farms': Dataset('my/data/farms.fgb')
+    }), 'farms', units='feet')
+
+def process(farm, farms):
+    plot(parcel, 'main geometry')
+
+    canada_border = box(-137.812500,46.316584,-55.195313,73.775780)
+
+    canadian_farms = farms.intersects(box)
+    for canadian_farm in canadian_farms:
+        plot(canadian_farm, 'canadian farm')
+
+mundi.q(process)
+```

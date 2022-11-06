@@ -1,0 +1,76 @@
+---
+title: "Introduction"
+description: "Welcome to mundi.py!"
+---
+
+# What is mundi.py?
+
+[Mundi.py](https://docs.mundi.ai) is a Python framework for spatial data analysis. Like geopandas, you can load spatial datasets, interact with geometries via [shapely operations](https://shapely.readthedocs.io/en/stable/), and visualize the results.
+
+Unlike geopandas, mundi.py does not extend from pandas. This results in more Pythonic syntax, [improved performance](/performance), and reduced memory consumption.
+
+By default, mundi.py only loads relevant chunks of a dataset. This allows a developer to write
+scripts on 100GB+ of spatial data without manually chunking or sending the operation to a compute cluster.
+
+### Geometric operations
+
+In mundi.py, every geometry is a subclass of a [shapely geometry](https://shapely.readthedocs.io/en/stable/). Features are accessed like an array:
+
+```py
+from mundipy.utils import plot
+
+# Iterate through NYC boroughs
+for borough in boroughs:
+  # shapely attributes work fine
+  area_sqft = borough.area
+
+  # access features with array notation
+  if borough['name'] == 'Manhattan':
+    continue
+
+  # visualize
+  plot(borough, 'borough')
+```
+
+<Card
+  title="Learn more about geometric operations"
+  href="/geometric-operations"
+  icon="object-intersect"
+>
+  Perform intersections, calculate areas, distances, and boundaries of shapes with shapely.
+</Card>
+
+### Properties and filtering
+
+Datasets are represented as collections of features. To filter, we iterate
+over the dataset:
+
+```py
+from mundipy.layer import Dataset
+
+ds = Dataset('trails.fgb')
+
+# Get trails over 8 miles long
+long_trails = [trail for trail in ds if trail.length > 8 * 5280]
+
+print('Found %d trails over 8 miles' % len(long_trails))
+```
+
+### Projections
+
+Mundi.py also [automatically chooses a projection](/projected-coordinate-systems)
+for geometric operations by selecting a projection that minimizes distortion for
+the geometries in the operation.
+
+
+# Getting Started
+
+<Accordion icon="download" title="Local setup">
+  ```sh
+  $ pip install mundipy
+  ```
+</Accordion>
+
+<Accordion icon="code" title="Spatial IDE">
+  Mundi.py is already installed, you can skip to learning [geometric operations](/geometric-operations).
+</Accordion>

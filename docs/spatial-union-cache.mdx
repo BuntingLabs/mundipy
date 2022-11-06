@@ -1,0 +1,13 @@
+---
+title: "Spatial Union Cache"
+description: "Cache expensive spatial queries with dynamic programming and taking the union of results."
+---
+
+Caching the results of expensive queries, like API calls or compute-heavy functions on DataFrames, can dramatically speed up the execution of a spatial program. In Python, adding the `functools.lru_cache` decorator to an existing function makes caching convenient by wrapping a function and hashing its arguments.
+
+## Spatial union cache
+
+The union spatial cache allows for dynamic programming, where a large areal query can be broken down into smaller subqueries, each of which can be cached. After subdividing the query, we can take a union of the results to return to the original query.
+
+Example code is on its way.
+

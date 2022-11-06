@@ -18,8 +18,8 @@
   },
   "topbarLinks": [
     {
-      "name": "Contact Support",
-      "url": "mailto:support@buntinglabs.com"
+      "name": "New GitHub issue",
+      "url": "https://github.com/BuntingLabs/mundipy/issues/new"
     }
   ],
   "topbarCtaButton": {
@@ -28,40 +28,30 @@
   },
   "anchors": [
     {
-      "name": "r/mundipy",
-      "url": "https://reddit.com/r/mundipy",
-      "icon": "reddit",
-      "color": "#FF4301"
+      "name": "GitHub",
+      "url": "https://github.com/BuntingLabs/mundipy",
+      "icon": "github",
+      "color": "#333"
     },
     {
-      "name": "Blog",
-      "url": "https://buntinglabs.com/blog",
-      "icon": "newspaper",
-      "color": "#1fd655"
-    },
-    {
-      "name": "Contact Us",
-      "url": "mailto:support@buntinglabs.com",
-      "icon": "envelope",
-      "color": "#0284c7"
+      "name": "Spatial IDE",
+      "url": "https://buntinglabs.com/solutions/spatial-ide",
+      "icon": "code",
+      "color": "#48371c"
     }
   ],
   "navigation": [
     {
       "group": "Introduction",
-      "pages": ["getting-started", "quickstart"]
+      "pages": ["introduction", "quickstart"]
     },
     {
-      "group": "Core Concepts",
-      "pages": ["layer-management", "spatial-indexing", "layer-view"]
-    },
-    {
-      "group": "Coordinate Systems",
-      "pages": ["projected-coordinate-systems"]
+      "group": "User Manual",
+      "pages": ["loading-datasets", "geometric-operations", "querying-datasets", "automatic-projections"]
     },
     {
       "group": "Utilities",
-      "pages": ["spatial-lru-cache"]
+      "pages": ["projection-api", "spatial-union-cache", "spatial-footprint-cache"]
     }
   ],
   "footerSocials": {
