@@ -34,7 +34,7 @@ def test_plot_point():
 
         return coffeeshop.features
 
-    outs = mundi.plot(process, output_type='geojson', clip_distance=0)
+    outs = mundi.plot(process, output_type='geojson')
 
     plotted = json.loads(outs)
 
