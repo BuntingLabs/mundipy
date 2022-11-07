@@ -74,60 +74,6 @@ class MultiPolygon(BaseGeometry):
 	def __init__(self, geo: geom.MultiPolygon, features: dict):
 		super().__init__(geo, features)
 
-# class LineString(geom.LineString):
-
-# 	def __init__(self, geo: geom.LineString, features: dict):
-# 		super().__init__(geo)
-
-# 		self.features = features
-# 		self._geo = geo
-
-# 	def __getitem__(self, item):
-# 		return self.features[item]
-
-# 	def __setitem__(self, item, value):
-# 		self.features[item] = value
-
-# 	def transform(self, from_crs, to_crs):
-# 		transformer = pyproj_transform(from_crs, to_crs)
-# 		return enrich_geom(transform(transformer, self._geo), self.features)
-
-# class Polygon(geom.Polygon):
-
-# 	def __init__(self, geo: geom.Polygon, features: dict):
-# 		super().__init__(geo)
-
-# 		self.features = features
-# 		self._geo = geo
-
-# 	def __getitem__(self, item):
-# 		return self.features[item]
-
-# 	def __setitem__(self, item, value):
-# 		self.features[item] = value
-
-# 	def transform(self, from_crs, to_crs):
-# 		transformer = pyproj_transform(from_crs, to_crs)
-# 		return enrich_geom(transform(transformer, self._geo), self.features)
-
-# class MultiPolygon(geom.MultiPolygon):
-
-# 	def __init__(self, geo: geom.MultiPolygon, features: dict):
-# 		super().__init__(geo)
-
-# 		self.features = features
-# 		self._geo = geo
-
-# 	def __getitem__(self, item):
-# 		return self.features[item]
-
-# 	def __setitem__(self, item, value):
-# 		self.features[item] = value
-
-# 	def transform(self, from_crs, to_crs):
-# 		transformer = pyproj_transform(from_crs, to_crs)
-# 		return enrich_geom(transform(transformer, self._geo), self.features)
-
 def from_geojson(geojson: dict):
 	if geojson['type'] != 'FeatureCollection':
 		raise TypeError('expected FeatureCollection as top type')
@@ -182,8 +128,3 @@ def enrich_geom(geo, features):
 		return MultiPolygon(geo, features)
 	else:
 		raise TypeError('enrich_geom got %s, expected Point/LineString/Polygon/MultiPolygon' % str(type(geo)))
-
-
-
-
-
