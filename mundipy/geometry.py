@@ -1,4 +1,5 @@
 import json
+from functools import partial
 
 import shapely.geometry as geom
 from shapely.geometry import shape
@@ -8,77 +9,124 @@ import pandas as pd
 
 from mundipy.cache import pyproj_transform
 
-class Point(geom.Point):
+class BaseGeometry():
+
+	parent_class = None
+
+	def __init__(self, geo, features: dict):
+		self.features = features
+		self._geo = geo
+
+	def __getitem__(self, item):
+		return self.features[item]
+
+	def __setitem__(self, item, value):
+		self.features[item] = value
+
+	def __getattr__(self, name):
+		# potentially intercept on behalf of shapely
+		parent_methods = [f for f in dir(self.parent_class)]
+		#  if callable(getattr(self.parent_class, f))
+
+		if name in parent_methods:
+			target = getattr(self.parent_class, name)
+
+			# bind to self if callable
+			if callable(target):
+				return partial(target, self._geo)
+			elif isinstance(target, property):
+				return target.fget(self._geo)
+			else:
+				return target
+		else:
+			raise AttributeError('"%s" has no attribute "%s"' % (str(type(self)), name))
+
+	def transform(self, from_crs, to_crs):
+		transformer = pyproj_transform(from_crs, to_crs)
+		return enrich_geom(transform(transformer, self._geo), self.features)
+
+class Point(BaseGeometry):
+
+	parent_class = geom.Point
 
 	def __init__(self, geo: geom.Point, features: dict):
-		super().__init__(geo)
+		super().__init__(geo, features)
 
-		self.features = features
-		self._geo = geo
+class LineString(BaseGeometry):
 
-	def __getitem__(self, item):
-		return self.features[item]
-
-	def __setitem__(self, item, value):
-		self.features[item] = value
-
-	def transform(self, from_crs, to_crs):
-		transformer = pyproj_transform(from_crs, to_crs)
-		return enrich_geom(transform(transformer, self._geo), self.features)
-
-class LineString(geom.LineString):
+	parent_class = geom.LineString
 
 	def __init__(self, geo: geom.LineString, features: dict):
-		super().__init__(geo)
+		super().__init__(geo, features)
 
-		self.features = features
-		self._geo = geo
 
-	def __getitem__(self, item):
-		return self.features[item]
+class Polygon(BaseGeometry):
 
-	def __setitem__(self, item, value):
-		self.features[item] = value
-
-	def transform(self, from_crs, to_crs):
-		transformer = pyproj_transform(from_crs, to_crs)
-		return enrich_geom(transform(transformer, self._geo), self.features)
-
-class Polygon(geom.Polygon):
+	parent_class = geom.Polygon
 
 	def __init__(self, geo: geom.Polygon, features: dict):
-		super().__init__(geo)
+		super().__init__(geo, features)
 
-		self.features = features
-		self._geo = geo
+class MultiPolygon(BaseGeometry):
 
-	def __getitem__(self, item):
-		return self.features[item]
-
-	def __setitem__(self, item, value):
-		self.features[item] = value
-
-	def transform(self, from_crs, to_crs):
-		transformer = pyproj_transform(from_crs, to_crs)
-		return enrich_geom(transform(transformer, self._geo), self.features)
-
-class MultiPolygon(geom.MultiPolygon):
+	parent_class = geom.MultiPolygon
 
 	def __init__(self, geo: geom.MultiPolygon, features: dict):
-		super().__init__(geo)
+		super().__init__(geo, features)
 
-		self.features = features
-		self._geo = geo
+# class LineString(geom.LineString):
 
-	def __getitem__(self, item):
-		return self.features[item]
+# 	def __init__(self, geo: geom.LineString, features: dict):
+# 		super().__init__(geo)
 
-	def __setitem__(self, item, value):
-		self.features[item] = value
+# 		self.features = features
+# 		self._geo = geo
 
-	def transform(self, from_crs, to_crs):
-		transformer = pyproj_transform(from_crs, to_crs)
-		return enrich_geom(transform(transformer, self._geo), self.features)
+# 	def __getitem__(self, item):
+# 		return self.features[item]
+
+# 	def __setitem__(self, item, value):
+# 		self.features[item] = value
+
+# 	def transform(self, from_crs, to_crs):
+# 		transformer = pyproj_transform(from_crs, to_crs)
+# 		return enrich_geom(transform(transformer, self._geo), self.features)
+
+# class Polygon(geom.Polygon):
+
+# 	def __init__(self, geo: geom.Polygon, features: dict):
+# 		super().__init__(geo)
+
+# 		self.features = features
+# 		self._geo = geo
+
+# 	def __getitem__(self, item):
+# 		return self.features[item]
+
+# 	def __setitem__(self, item, value):
+# 		self.features[item] = value
+
+# 	def transform(self, from_crs, to_crs):
+# 		transformer = pyproj_transform(from_crs, to_crs)
+# 		return enrich_geom(transform(transformer, self._geo), self.features)
+
+# class MultiPolygon(geom.MultiPolygon):
+
+# 	def __init__(self, geo: geom.MultiPolygon, features: dict):
+# 		super().__init__(geo)
+
+# 		self.features = features
+# 		self._geo = geo
+
+# 	def __getitem__(self, item):
+# 		return self.features[item]
+
+# 	def __setitem__(self, item, value):
+# 		self.features[item] = value
+
+# 	def transform(self, from_crs, to_crs):
+# 		transformer = pyproj_transform(from_crs, to_crs)
+# 		return enrich_geom(transform(transformer, self._geo), self.features)
 
 def from_geojson(geojson: dict):
 	if geojson['type'] != 'FeatureCollection':

@@ -25,6 +25,7 @@ from psycopg_pool import ConnectionPool
 from mundipy.cache import (spatial_cache_footprint, pyproj_transform,
 	union_spatial_cache)
 from mundipy.geometry import from_dataframe, from_row_series, enrich_geom
+import mundipy.geometry as mgeom
 
 def elements_from_cursor(cur):
 	# get column names
@@ -153,8 +154,8 @@ class LayerView:
 		"""
 		if not isinstance(self.layer, Dataset):
 			raise TypeError('intersects() on not Dataset undefined')
-		if not isinstance(geom, BaseGeometry):
-			raise TypeError('geom is not a shapely.geometry')
+		if not isinstance(geom, BaseGeometry) and not isinstance(geom, mgeom.BaseGeometry):
+			raise TypeError('geom is neither shapely.geometry nor mundipy.geometry')
 
 		# convert geom to EPSG:4326
 		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
@@ -175,8 +176,8 @@ class LayerView:
 		"""
 		if not isinstance(self.layer, Dataset):
 			raise TypeError('intersects() on not Dataset undefined')
-		if not isinstance(geom, BaseGeometry):
-			raise TypeError('geom is not a shapely.geometry')
+		if not isinstance(geom, BaseGeometry) and not isinstance(geom, mgeom.BaseGeometry):
+			raise TypeError('geom is neither shapely.geometry nor mundipy.geometry')
 
 		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
 

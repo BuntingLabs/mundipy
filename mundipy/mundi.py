@@ -77,11 +77,10 @@ class MundiQ:
         # coerce shape into a GeoSeries, no matter what it is
         # shape can literally be anything
         if isinstance(shape, Point) or isinstance(shape, Polygon) or isinstance(shape, MultiPolygon) or isinstance(shape, LineString):
-            # convert from our geom first
-            if isinstance(shape, geom.Point) or isinstance(shape, geom.LineString):
-                shape = shape._geo
-
             shape = gpd.GeoSeries([shape])
+        # convert from our geom first
+        elif isinstance(shape, geom.Point) or isinstance(shape, geom.Polygon) or isinstance(shape, geom.MultiPolygon) or isinstance(shape, geom.LineString):
+            shape = gpd.GeoSeries([shape._geo])
         elif isinstance(shape, gpd.GeoDataFrame):
             shape = shape.geometry
         elif isinstance(shape, list):
