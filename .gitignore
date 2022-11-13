@@ -1,5 +1,6 @@
 .ipynb_checkpoints
 *.ipynb
+__pycache__
 
 # data formats
 *.csv
