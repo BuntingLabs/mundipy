@@ -59,5 +59,10 @@
     "website": "https://buntinglabs.com/",
     "twitter": "https://twitter.com/BuntingLabs",
     "linkedin": "https://www.linkedin.com/company/bunting-labs/"
+  },
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_sXgYvyDSaphDcGHvj3ABwhY33YFy6NIp4jnUVbd252U",
+    }
   }
 }
