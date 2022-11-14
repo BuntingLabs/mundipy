@@ -43,7 +43,7 @@
   "navigation": [
     {
       "group": "Introduction",
-      "pages": ["introduction", "quickstart"]
+      "pages": ["introduction", "performance", "quickstart"]
     },
     {
       "group": "User Manual",
@@ -62,7 +62,7 @@
   },
   "analytics": {
     "posthog": {
-      "apiKey": "phc_sXgYvyDSaphDcGHvj3ABwhY33YFy6NIp4jnUVbd252U",
+      "apiKey": "phc_sXgYvyDSaphDcGHvj3ABwhY33YFy6NIp4jnUVbd252U"
     }
   }
 }
