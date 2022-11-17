@@ -1,5 +1,5 @@
 import json
-from functools import partial
+from functools import partial, lru_cache
 
 import shapely.geometry as geom
 from shapely.geometry import shape, box
@@ -43,7 +43,7 @@ class BaseGeometry():
 
 					projection = choose_pcs(box(*total_bounds), units='meters')['crs']
 
-					custom_args = [self._geo, *args]
+					custom_args = [self, *args]
 
 					# convert to projections and raw shapely objects
 					# pass through if floats, other types, etc
@@ -70,6 +70,7 @@ class BaseGeometry():
 		else:
 			raise AttributeError('"%s" has no attribute "%s"' % (str(type(self)), name))
 
+	@lru_cache(maxsize=4)
 	def transform(self, from_crs, to_crs):
 		transformer = pyproj_transform(from_crs, to_crs)
 		return enrich_geom(transform(transformer, self._geo), self.features)

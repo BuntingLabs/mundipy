@@ -1,14 +1,12 @@
 """
-`Dataset`s and `LayerView`s form the core abstractions in mundipy.
+The `Dataset` forms the core abstraction in mundipy.
 
-`Dataset` comprises any source for vector data. Instantiating a
-`Dataset` declares its accessibility, but does not automatically
+A Dataset comprises any source for vector data. Instantiating a
+Dataset declares its accessibility, but does not automatically
 load features, as all features are lazily loaded.
 
-`LayerView` represents a collection of vector features, typically
-a subset from a `Dataset`. This makes queries like intersection
-and nearest much faster because only a subset of the `Dataset`
-must be loaded.
+Dataset implements the iterable interface, making it easy to iterate
+over features in a dataset.
 """
 
 from shapely.geometry.base import BaseGeometry
@@ -142,7 +140,7 @@ class Dataset:
 			raise TypeError('geom is neither shapely.geometry nor mundipy.geometry')
 
 		# buffer by an ~inch to prevent point
-		bbox = geom.buffer(1e-3).bounds
+		bbox = (geom.buffer(1e-3) if isinstance(geom, Point) or isinstance(geom, mgeom.Point) else geom).bounds
 
 		potentially_intersecting = self.inside_bbox(bbox)
 		return list(filter(lambda g: g.intersects(geom), potentially_intersecting))
