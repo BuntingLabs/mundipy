@@ -78,14 +78,14 @@ class Dataset:
 			raise TypeError('data for Dataset() is neither filename nor dict with PostgreSQL details')
 
 	@union_spatial_cache
-	def _load(self, geom, pcs='EPSG:4326'):
+	def _load(self, geom):
 		"""
 		Load part or the entire Dataset as a list of mundipy geometries.
 
 		Takes geom as a shapely.geometry, or None to load the
 		entire dataset.
 
-		Returns the dataset in PCS coordinates.
+		Returns the dataset in WGS84.
 		"""
 
 		if self._db_url is not None:
@@ -100,45 +100,31 @@ class Dataset:
 					# load entire geometry
 					query = "SELECT * FROM %s WHERE geometry && ST_GeomFromEWKT('SRID=4326;%s')" % (self._db_table, geom.wkt)
 
-				elements = elements_from_cursor(conn.execute(query))
-				return [geo.transform('EPSG:4326', pcs) for geo in elements]
+				return elements_from_cursor(conn.execute(query))
 
 		if geom is None:
 			gdf = gpd.read_file(self.filename)
 		else:
 			gdf = gpd.read_file(self.filename, bbox=geom)
 
-		return [geo.transform('EPSG:4326', pcs) for geo in from_dataframe(gdf)]
+		return from_dataframe(gdf)
 
 	@lru_cache(maxsize=8)
-	def geometry_collection(self, pcs):
-		return self._load(None, pcs=pcs)
+	def geometry_collection(self):
+		return self._load(None)
 
 	"""Read into a Dataset at a specific geometry (WGS84)."""
-	def inside_bbox(self, bbox, pcs='EPSG:4326'):
+	def inside_bbox(self, bbox):
 		if not isinstance(bbox, tuple) or len(bbox) != 4:
 			raise TypeError('inside_bbox expected bbox to be a 4-tuple')
 
-		return self._load(box(*bbox), pcs=pcs)
-
-class LayerView:
-	"""
-	`LayerView` represents a collection of vector features in
-	a single dataset. It implements an `Iterable` interface,
-	allowing for one to loop through all features in the dataset,
-	or smart filtering without loading the entire dataset into
-	memory.
-	"""
-
-	def __init__(self, layer, pcs):
-		self.layer = layer
-		self.pcs = pcs
+		return self._load(box(*bbox))
 
 	def __iter__(self):
 		"""
 		Iterate through all items of the dataset.
 		"""
-		yield from self.layer.geometry_collection(self.pcs)
+		yield from self.geometry_collection()
 
 	def intersects(self, geom):
 		"""
@@ -152,17 +138,13 @@ class LayerView:
 		for feat in layer.intersects(Point(-37.0, 42.1)):
 			plot(feat)
 		"""
-		if not isinstance(self.layer, Dataset):
-			raise TypeError('intersects() on not Dataset undefined')
 		if not isinstance(geom, BaseGeometry) and not isinstance(geom, mgeom.BaseGeometry):
 			raise TypeError('geom is neither shapely.geometry nor mundipy.geometry')
 
-		# convert geom to EPSG:4326
-		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
-		# buffer a little bit to prevent point
-		bbox = transform(to_wgs, geom.buffer(1e-8)).bounds
+		# buffer by an ~inch to prevent point
+		bbox = geom.buffer(1e-3).bounds
 
-		potentially_intersecting = self.layer.inside_bbox(bbox, self.pcs)
+		potentially_intersecting = self.inside_bbox(bbox)
 		return list(filter(lambda g: g.intersects(geom), potentially_intersecting))
 
 	def nearest(self, geom):
@@ -174,25 +156,21 @@ class LayerView:
 
 		`geom`: inherits from `shapely.geometry`
 		"""
-		if not isinstance(self.layer, Dataset):
-			raise TypeError('intersects() on not Dataset undefined')
 		if not isinstance(geom, BaseGeometry) and not isinstance(geom, mgeom.BaseGeometry):
 			raise TypeError('geom is neither shapely.geometry nor mundipy.geometry')
-
-		to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
 
 		# increasing look outside of this bbox for the nearest item
 		buffer_distances = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8]
 		for buffer_size in buffer_distances:
 			# buffer geom.bbox
-			bbox = transform(to_wgs, geom.buffer(buffer_size)).bounds
+			bbox = geom.buffer(buffer_size).bounds
 
-			items = self.layer.inside_bbox(bbox, self.pcs)
+			items = self.inside_bbox(bbox)
 			if len(items) > 0:
 				return min(items, key=lambda geo: geom.distance(geo))
 
 		# fuck it, check the whole dataframe
-		items = self.layer.geometry_collection(self.pcs)
+		items = self.geometry_collection()
 		if len(items) > 0:
 			return min(items, key=lambda geo: geom.distance(geo))
 

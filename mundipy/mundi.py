@@ -18,7 +18,7 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 
 from mundipy.map import Map
-from mundipy.layer import Dataset, LayerView
+from mundipy.layer import Dataset
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
@@ -28,11 +28,8 @@ from mundipy.utils import _plot
 
 class MundiQ:
     def __init__(self, center, mapdata, plot_target=None, units='meters'):
-        self.pcs = choose_pcs(box(*center.bounds), units=units)['crs']
-
-        # a row in a GeoDataFrame, with a column called .geometry
-        # in local projected coordinate system
-        self.center = center.transform('EPSG:4326', self.pcs)
+        # a shapely object in EPSG:4326
+        self.center = center
 
         # GeoPool
         self.mapdata = mapdata
@@ -50,7 +47,7 @@ class MundiQ:
         df_args = []
         for arg in args:
             try:
-                df_args.append(LayerView(self.mapdata.collections[arg], self.pcs))
+                df_args.append(self.mapdata.collections[arg])
             except KeyError:
                 raise TypeError('mundi process() function requests dataset \'%s\', but no dataset was defined on Mundi' % arg)
 
@@ -67,8 +64,7 @@ class MundiQ:
 
     def bbox(self, distance=500):
         """Builds a bounding box around the center object in WGS84."""
-        to_wgs = pyproj_transform(self.pcs, 'EPSG:4326')
-        return transform(to_wgs, self._bbox(distance=distance)).bounds
+        return self._bbox(distance).bounds
 
     def plot(self, shape, name):
         if self.plot_target is None:
@@ -90,9 +86,6 @@ class MundiQ:
 
         # fix shapes
         shape = shape.apply(lambda g: g.buffer(0) if isinstance(g, Polygon) or isinstance(g, MultiPolygon) else g)
-
-        # convert to WGS84
-        shape = shape.set_crs(crs=self.pcs).to_crs(epsg=4326)
 
         # check color
         if name in self.plot_legend.keys():
@@ -126,12 +119,12 @@ class Mundi:
         elif output_type == 'matplotlib':
             fig, ax = plt.subplots()
 
-        if element_index < 0 or element_index > len(self.main.geometry_collection('EPSG:4326')):
+        if element_index < 0 or element_index > len(self.main.geometry_collection()):
             raise TypeError('element_index passed to plot() that was < 0 or > length of dataset')
 
         # TODO: drop duplicates, except it's very slow
         #.drop_duplicates(subset=['geometry'])
-        Q = MundiQ(self.main.geometry_collection('EPSG:4326')[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units)
+        Q = MundiQ(self.main.geometry_collection()[element_index], self.mapdata, plot_target=('geojson' if output_type == 'geojson' else ax), units=self.units)
 
         with redirect_stdout(io.StringIO()) as f:
             res = Q.call_process(fn)
@@ -163,7 +156,7 @@ class Mundi:
     def q(self, fn, progressbar=False, n_start=None, n_end=None):
         # make iterator unique by geometry
         # TODO: drop duplicates, except it's very slow
-        unique_iterator = self.main.geometry_collection('EPSG:4326')
+        unique_iterator = self.main.geometry_collection()
 
         res_keys = None
         res_shapely_col = 'geometry'
@@ -179,16 +172,12 @@ class Mundi:
 
             user_printed = None
 
-            try:
-                Q = MundiQ(original_shape, self.mapdata)
+            Q = MundiQ(original_shape, self.mapdata)
 
-                # capture stdout
-                with redirect_stdout(io.StringIO()) as f:
-                    res = Q.call_process(fn)
-                user_printed = f.getvalue()
-                
-            except NoProjectionFoundError:
-                continue
+            # capture stdout
+            with redirect_stdout(io.StringIO()) as f:
+                res = Q.call_process(fn)
+            user_printed = f.getvalue()
 
             # if res is None, skip
             if res is None:
@@ -220,15 +209,8 @@ class Mundi:
 
             for key, val in res.items():
                 # returned straight from mundi.q()
-                # will need to translate from local PCS to WGS84
-                # if this is the geometry column
-                if key == res_shapely_col:
-                    to_wgs = pyproj_transform(Q.pcs, 'EPSG:4326')
-                    geodetic_out = transform(to_wgs, val)
-
-                    res_outs[key].append(geodetic_out)
-                else:
-                    res_outs[key].append(val)
+                # geometries should already be in EPSG:4326
+                res_outs[key].append(val)
 
             if res_shapely_col == 'geometry':
                 res_outs['geometry'].append(original_shape)

@@ -2,12 +2,13 @@ import json
 from functools import partial
 
 import shapely.geometry as geom
-from shapely.geometry import shape
+from shapely.geometry import shape, box
 from shapely.ops import transform
 import geopandas as gpd
 import pandas as pd
 
 from mundipy.cache import pyproj_transform
+from mundipy.pcs import choose_pcs
 
 class BaseGeometry():
 
@@ -33,7 +34,35 @@ class BaseGeometry():
 
 			# bind to self if callable
 			if callable(target):
-				return partial(target, self._geo)
+				def wrapper(*args, **kwargs):
+					# wrap in appropriate PCS
+					# get total bounds (minx, miny, maxx, maxy)
+					total_bounds = [ obj.bounds for obj in args if isinstance(obj, BaseGeometry) ] + [ self.bounds ]
+					total_bounds = ( min(map(lambda b: b[0], total_bounds)), min(map(lambda b: b[1], total_bounds)),
+									 max(map(lambda b: b[2], total_bounds)), max(map(lambda b: b[3], total_bounds)) )
+
+					projection = choose_pcs(box(*total_bounds), units='meters')['crs']
+
+					custom_args = [self._geo, *args]
+
+					# convert to projections and raw shapely objects
+					# pass through if floats, other types, etc
+					# beware of double projecting, which is why we do shapely first, then mundipy geometries
+					transformer = pyproj_transform('EPSG:4326', projection)
+					custom_args = [ transform(transformer, x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
+
+					custom_args = [ x.transform('EPSG:4326', projection)._geo if isinstance(x, BaseGeometry) else x for x in custom_args ]
+
+					ret = target(*custom_args, **kwargs)
+
+					# no conversion needed
+					if not isinstance(ret, geom.base.BaseGeometry):
+						return ret
+
+					# return to our normal coordinate system
+					return enrich_geom(ret, self.features).transform(projection, 'EPSG:4326')
+
+				return wrapper
 			elif isinstance(target, property):
 				return target.fget(self._geo)
 			else:
