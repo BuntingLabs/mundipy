@@ -41,7 +41,7 @@ def union_spatial_cache(fn, maxsize=128):
 			raise TypeError('last argument to union_spatial_cache fn is neither None nor shapely.geometry')
 
 		# get pcs
-		pcs = kwargs['pcs'] if 'pcs' in kwargs else inspect.signature(fn).parameters['pcs'].default
+		pcs = kwargs['pcs'] if 'pcs' in kwargs else 'EPSG:4326'
 
 		# if no geometry, pass through
 		if geom is None:
@@ -71,7 +71,8 @@ def union_spatial_cache(fn, maxsize=128):
 					continue
 
 				# get df in this area
-				intersecting_df = list(filter(lambda g: g.intersects(intersecting_area), df))
+				# some returned points from the function might be mundipy geometries
+				intersecting_df = list(filter(lambda g: (g._geo if not isinstance(g, BaseGeometry) else g).intersects(intersecting_area), df))
 
 				all_dfs.append(intersecting_df)
 
@@ -81,6 +82,7 @@ def union_spatial_cache(fn, maxsize=128):
 		# add most recent result if necessary
 		if remaining_area.area > 0.0:
 			result = fn(*args[:-1], remaining_area, **kwargs)
+
 			all_dfs.append(result)
 
 			# re-order cache list to include the new hit
