@@ -173,3 +173,47 @@ class Dataset:
 			return min(items, key=lambda geo: geom.distance(geo))
 
 		return None
+
+	def _repr_svg_(self):
+		# Inspiration from https://github.com/shapely/shapely/blob/34136cd3104a197c3b47c97d44914197fb00879a/shapely/geometry/base.py#L263
+		# Some of the below code is licensed as shapely is
+
+		# Establish SVG canvas that will fit all the data + small space
+		total_bounds = [ obj.bounds for obj in iter(self) ]
+		total_bounds = ( min(map(lambda b: b[0], total_bounds)), min(map(lambda b: b[1], total_bounds)),
+						 max(map(lambda b: b[2], total_bounds)), max(map(lambda b: b[3], total_bounds)) )
+
+		xmin, ymin, xmax, ymax = total_bounds
+
+		# Expand bounds by a fraction of the data ranges
+		expand = 0.04  # or 4%, same as R plots
+		widest_part = max([xmax - xmin, ymax - ymin])
+		expand_amount = widest_part * expand
+		xmin -= expand_amount
+		ymin -= expand_amount
+		xmax += expand_amount
+		ymax += expand_amount
+
+		dx = xmax - xmin
+		dy = ymax - ymin
+		width = min([max([300.0, dx]), 500])
+		height = min([max([300.0, dy]), 500])
+		try:
+			scale_factor = max([dx, dy]) / max([width, height])
+		except ZeroDivisionError:
+			scale_factor = 1.0
+
+		view_box = f"{xmin} {ymin} {dx} {dy}"
+		transform = f"matrix(1,0,0,-1,0,{ymax + ymin})"
+
+		svg_content = ''.join(['<g transform="{0}">{1}</g>'.format(transform, child.svg(scale_factor)) for child in iter(self) ])
+
+		return (
+			'<svg xmlns="http://www.w3.org/2000/svg" '
+			'xmlns:xlink="http://www.w3.org/1999/xlink" '
+			'width="{1}" height="{2}" viewBox="{0}" '
+			'preserveAspectRatio="xMinYMin meet">'
+			'{3}</svg>'
+		).format(view_box, width, height, svg_content)
+
+
