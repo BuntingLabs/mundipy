@@ -4,6 +4,7 @@ import json
 
 from mundipy.mundi import Mundi, Map
 from mundipy.utils import plot
+from mundipy.geometry import enrich_geom
 from shapely.geometry import Point, LineString
 
 def test_plot_context():
@@ -12,16 +13,18 @@ def test_plot_context():
         }), 'coffeeshops', units='meters')
 
     def process(coffeeshop):
-        plot(coffeeshop.buffer(0), 'coffeeshop')
+        plot(coffeeshop, 'coffeeshop')
 
         return coffeeshop.features
 
-    outs = mundi.plot(process, output_type='geojson')
-    # should verify output because it doesn't look right
+    outs = mundi.plot(process)
     assert isinstance(outs, str)
+
     plotted = json.loads(outs)
 
-    assert len(plotted['geometries']) == 0
+    assert len(plotted['geometries']) == 1
+    assert plotted['geometries'][0]['coordinates'] == [-118.3443726, 34.1689253]
+    assert plotted['geometries'][0]['type'] == 'Point'
 
 def test_plot_point():
     mundi = Mundi(Map({
@@ -29,12 +32,12 @@ def test_plot_point():
         }), 'coffeeshops', units='meters')
 
     def process(coffeeshop):
-        plot(Point(1, 1), 'coffeeshop')
-        plot(LineString([[0, 0], [1, 1], [2, 2]]), 'line')
+        plot(enrich_geom(Point(1, 1), dict()), 'coffeeshop')
+        plot(enrich_geom(LineString([[0, 0], [1, 1], [2, 2]]), dict()), 'line')
 
         return coffeeshop.features
 
-    outs = mundi.plot(process, output_type='geojson')
+    outs = mundi.plot(process)
 
     plotted = json.loads(outs)
 

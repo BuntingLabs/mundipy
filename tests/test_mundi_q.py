@@ -88,7 +88,7 @@ def test_mundi_crs():
 
         return dict()
 
-    mundi.plot(process_points, output_type='geojson')
+    mundi.plot(process_points)
 
 def test_no_pygeos():
     mundi = Mundi(Map({
@@ -100,4 +100,4 @@ def test_no_pygeos():
 
         return dict()
 
-    mundi.plot(process_points, output_type='geojson')
+    mundi.plot(process_points)
