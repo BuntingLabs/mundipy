@@ -37,20 +37,20 @@ def union_spatial_cache(fn, maxsize=128):
 		if len(args) == 0:
 			raise TypeError('union_spatial_cache fn must be passed >= 1 argument')
 		geom = args[-1]
-		if geom is not None and not isinstance(geom, BaseGeometry):
-			raise TypeError('last argument to union_spatial_cache fn is neither None nor shapely.geometry')
-
-		# get pcs
-		pcs = kwargs['pcs'] if 'pcs' in kwargs else 'EPSG:4326'
 
 		# if no geometry, pass through
 		if geom is None:
 			return fn(*args, **kwargs)
 
+		if not isinstance(geom, BaseGeometry):
+			raise TypeError('last argument to union_spatial_cache fn is neither None nor shapely.geometry')
+
+		# get pcs
+		pcs = kwargs['pcs'] if 'pcs' in kwargs else 'EPSG:4326'
+
 		# get all cache items that intersect and have same pcs
-		cached_dfs = filter(lambda c: c[0][0].intersects(geom) and c[0][1] == pcs, cache)
-		# sort by area
-		cached_dfs = list(sorted(cached_dfs, reverse=True, key=lambda c: c[0][0].area))
+		# by default they will be sorted by area
+		cached_dfs = filter(lambda c: c[0][1] == pcs and c[0][0].intersects(geom), cache)
 
 		# find remaining area
 		remaining_area = geom
@@ -79,6 +79,10 @@ def union_spatial_cache(fn, maxsize=128):
 			# subtract from remaining
 			remaining_area = remaining_area.difference(cached_geom)
 
+			# quit early if no area left
+			if remaining_area.area == 0.0:
+				break
+
 		# add most recent result if necessary
 		if remaining_area.area > 0.0:
 			result = fn(*args[:-1], remaining_area, **kwargs)
@@ -86,7 +90,8 @@ def union_spatial_cache(fn, maxsize=128):
 			all_dfs.append(result)
 
 			# re-order cache list to include the new hit
-			cache = [((geom, pcs), result)] + cache[:maxsize-1]
+			# sort by area so largest area is first
+			cache = sorted([((geom, pcs), result)] + cache[:maxsize-1], reverse=True, key=lambda c: c[0][0].area)
 
 		# TODO drop duplicates
 		return [item for sublist in all_dfs for item in sublist]
@@ -114,11 +119,11 @@ def spatial_cache_footprint(fn, maxsize=128):
 		'misses': 0
 	}
 
+	# https://stackoverflow.com/questions/218616/how-to-get-method-parameter-names
+	fn_is_method = inspect.getfullargspec(fn)[0][0] == 'self'
+
 	def check_cache_first(*args, **kwargs):
 		nonlocal cache
-
-		# https://stackoverflow.com/questions/218616/how-to-get-method-parameter-names
-		fn_is_method = inspect.getfullargspec(fn)[0][0] == 'self'
 
 		if not fn_is_method and len(args) < 1:
 			raise TypeError('zero args passed to function expecting one (spatial_cache_footprint)')

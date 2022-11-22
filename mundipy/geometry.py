@@ -160,6 +160,11 @@ SHAPELY_METHODS = {
 	'xy': 0
 }
 
+# dir() is expensive, so cache by type
+@lru_cache(maxsize=8)
+def parent_methods(parent_class):
+	return [f for f in dir(parent_class)]
+
 class BaseGeometry():
 
 	parent_class = None
@@ -197,12 +202,12 @@ class BaseGeometry():
 	def __setitem__(self, item, value):
 		self.features[item] = value
 
-	def __getattr__(self, name):
-		# potentially intercept on behalf of shapely
-		parent_methods = [f for f in dir(self.parent_class)]
-		#  if callable(getattr(self.parent_class, f))
+	@property
+	def fast_bounds(self):
+		return self.transform('EPSG:4326')._geo.bounds
 
-		if name in parent_methods:
+	def __getattr__(self, name):
+		if name in parent_methods(self.parent_class):
 			target = getattr(self.parent_class, name)
 
 			# bind to self if callable
@@ -210,8 +215,9 @@ class BaseGeometry():
 				# get attribute flags
 				attr_flags = SHAPELY_METHODS[name]
 
-				def wrapper(*args, **kwargs):
-					# wrapper function for any method
+				def projection_wrapper(*args, **kwargs):
+					# wrapper function for any method that could require
+					# projecting to a cartesian coordinate plane
 					custom_args = [self, *args]
 
 					# many methods require that we transform the self and other
@@ -219,8 +225,7 @@ class BaseGeometry():
 					if attr_flags & TRANSFORM_INPUT:
 						# wrap in appropriate PCS
 						# get total bounds (minx, miny, maxx, maxy)
-						# use the fast bounds approximation for speed here
-						total_bounds = [ obj.bounds for obj in args if isinstance(obj, BaseGeometry) ] + [ self.bounds ]
+						total_bounds = [ obj.fast_bounds for obj in args if isinstance(obj, BaseGeometry) ] + [ self.fast_bounds ]
 						total_bounds = ( min(map(lambda b: b[0], total_bounds)), min(map(lambda b: b[1], total_bounds)),
 										 max(map(lambda b: b[2], total_bounds)), max(map(lambda b: b[3], total_bounds)) )
 
@@ -247,7 +252,7 @@ class BaseGeometry():
 					ret = target(*custom_args, **kwargs)
 					return enrich_geom(ret, self.features, pcs=projection)
 
-				return wrapper
+				return projection_wrapper
 			elif isinstance(target, property):
 				# properties are calculated in EPSG:4326
 				return target.fget(self.transform('EPSG:4326')._geo)
