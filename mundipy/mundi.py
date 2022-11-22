@@ -22,7 +22,7 @@ from mundipy.layer import Dataset
 from mundipy.api.osm import grab_from_osm
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
-from mundipy.geometry import from_row_series, enrich_geom
+from mundipy.geometry import enrich_geom
 import mundipy.geometry as geom
 from mundipy.utils import _plot
 

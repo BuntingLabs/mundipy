@@ -10,19 +10,19 @@ over features in a dataset.
 """
 
 from shapely.geometry.base import BaseGeometry
-from shapely.geometry import box, Point, Polygon, MultiPolygon
+from shapely.geometry import box, shape, Point, Polygon, MultiPolygon
 import shapely.wkt
 import shapely.wkb
-import geopandas as gpd
 from shapely.ops import transform
 from functools import lru_cache, partial
 from cached_property import cached_property_with_ttl
 import psycopg
+import fiona
 from psycopg_pool import ConnectionPool
 
 from mundipy.cache import (spatial_cache_footprint, pyproj_transform,
 	union_spatial_cache)
-from mundipy.geometry import from_dataframe, from_row_series, enrich_geom
+from mundipy.geometry import enrich_geom
 import mundipy.geometry as mgeom
 
 def elements_from_cursor(cur):
@@ -100,12 +100,14 @@ class Dataset:
 
 				return elements_from_cursor(conn.execute(query))
 
-		if geom is None:
-			gdf = gpd.read_file(self.filename)
-		else:
-			gdf = gpd.read_file(self.filename, bbox=geom)
+		f = fiona.open(self.filename)
 
-		return from_dataframe(gdf)
+		if geom is None:
+			items = f.values()
+		else:
+			items = f.values(bbox=geom.bounds)
+
+		return [ enrich_geom(shape(item['geometry']), dict(item['properties'])) for item in items ]
 
 	@lru_cache(maxsize=8)
 	def geometry_collection(self):
