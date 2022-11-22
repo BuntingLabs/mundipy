@@ -19,6 +19,7 @@
         "opening_hours": "Mo-Sa 07:00-19:00; Su 08:00-18:00",
         "phone": "+1-818-845-2326",
         "shop": "coffee",
+        "timestamp": "2020-03-14T15:32:52.192548651",
         "website": "https://www.romancingthebeancafe.com/"
       },
       "geometry": {
@@ -45,6 +46,7 @@
         "outdoor_seating": "yes",
         "phone": "626) 844-4644",
         "shop": "coffee",
+        "timestamp": "2020-03-14T15:32:52.192548651",
         "website": "https://www.urthcaffe.com/"
       },
       "geometry": {
@@ -83,6 +85,7 @@
         "opening_hours": "Mo-Th, Su 08:00-22:00; Fr, Sa 08:00-23:00",
         "phone": "+1 818-308-7990",
         "shop": "coffee",
+        "timestamp": "2020-03-14T15:32:52.192548651",
         "website": "https://www.republicofpie.com/"
       },
       "geometry": {
@@ -105,6 +108,7 @@
         "opening_hours": "Mo-Sa 08:00-19:00; Su 09:00-19:00",
         "phone": "+1 818-980-5092",
         "shop": "coffee",
+        "timestamp": "2020-03-14T15:32:52.192548651",
         "website": "https://joecoffeela.com/"
       },
       "geometry": {
@@ -124,6 +128,7 @@
         "name": "Priscilla's Coffee",
         "phone": "(818)-843-5707",
         "shop": "coffee",
+        "timestamp": "2020-03-14T15:32:52.192548651",
         "website": "http://www.priscillascoffee.com/home.html"
       },
       "geometry": {
@@ -147,6 +152,7 @@
         "name": "Philz Coffee",
         "name:fa": "کافه فیلز",
         "shop": "coffee",
+        "timestamp": "2020-03-14T15:32:52.192548651",
         "takeaway": "yes"
       },
       "geometry": {
@@ -222,6 +228,7 @@
         "name": "Starbucks",
         "official_name": "Starbucks Coffee",
         "shop": "coffee",
+        "timestamp": "2020-03-14T15:32:52.192548651",
         "takeaway": "yes"
       },
       "geometry": {
