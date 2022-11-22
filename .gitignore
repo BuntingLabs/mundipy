@@ -1,6 +1,7 @@
 .ipynb_checkpoints
 *.ipynb
 __pycache__
+poetry.lock
 
 # data formats
 *.csv
