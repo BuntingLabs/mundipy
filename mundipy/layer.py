@@ -67,13 +67,15 @@ class Dataset:
 		if isinstance(data, dict):
 			self._db_url = data['url']
 			self._db_table = data['table']
-
-			# 3 second timeout
-			self._pool = ConnectionPool(self._db_url, timeout=3.0)
 		elif isinstance(data, str):
 			self.filename = data
 		else:
 			raise TypeError('data for Dataset() is neither filename nor dict with PostgreSQL details')
+
+	@property
+	def _pool(self):
+		# 3 second timeout
+		return ConnectionPool(self._db_url, timeout=3.0, max_size=1)
 
 	@union_spatial_cache
 	def _load(self, geom):
