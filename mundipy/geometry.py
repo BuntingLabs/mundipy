@@ -209,9 +209,11 @@ class BaseGeometry():
 	@property
 	def __geo_interface__(self):
 		"""Get a GeoJSON representation in EPSG:4326"""
-		return dict({
+		return {
+			'type': 'Feature',
+			'geometry': self.transform('EPSG:4326')._geo.__geo_interface__,
 			'properties': self.features
-			}, **self.transform('EPSG:4326')._geo.__geo_interface__)
+		}
 
 	def __getattr__(self, name):
 		if name in parent_methods(self.parent_class):
