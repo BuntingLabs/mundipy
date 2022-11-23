@@ -17,13 +17,11 @@ def test_plot_context():
 
         return coffeeshop
 
-    outs = mundi.plot(process)
-    assert isinstance(outs, str)
-
-    plotted = json.loads(outs)
+    plotted = mundi.plot(process)
+    assert isinstance(plotted, dict)
 
     assert len(plotted['geometries']) == 1
-    assert plotted['geometries'][0]['coordinates'] == [-118.3443726, 34.1689253]
+    assert plotted['geometries'][0]['coordinates'] == (-118.3443726, 34.1689253)
     assert plotted['geometries'][0]['type'] == 'Point'
 
 def test_plot_point():
@@ -37,9 +35,7 @@ def test_plot_point():
 
         return coffeeshop
 
-    outs = mundi.plot(process)
-
-    plotted = json.loads(outs)
+    plotted = mundi.plot(process)
 
     assert len(plotted['geometries']) == 2
 

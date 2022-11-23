@@ -105,11 +105,11 @@ class Mundi:
         # merge geometries into one
         geom_col = GeometryCollection(Q.plot_contents)
 
-        return json.dumps({
+        return {
             "type": "GeometryCollection",
             "geometries": geom_col.__geo_interface__['geometries'],
             "properties": { k: (int(v) if isinstance(v, int) else (float(v) if isinstance(v, float) else str(v))) for (k, v) in res.features.items() if not isinstance(v, BaseGeometry)}
-        })
+        }
 
     def q(self, fn, progressbar=False, n_start=None, n_end=None):
         # make iterator unique by geometry
