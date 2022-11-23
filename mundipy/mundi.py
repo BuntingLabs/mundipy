@@ -8,7 +8,6 @@ from contextlib import redirect_stdout
 
 import fiona
 from tqdm import tqdm
-import geopandas as gpd
 from shapely.ops import transform
 from shapely.geometry import Polygon, MultiPolygon, LineString, Point, box
 from shapely.geometry.collection import GeometryCollection
@@ -50,15 +49,6 @@ class MundiQ:
         ctx.run(lambda: _plot.set(self.plot))
 
         return ctx.run(fn, self.center, *df_args)
-
-    def _bbox(self, distance=500):
-        """Builds a bounding box around the center object in the local coordinate system."""
-
-        return self.center.buffer(distance)
-
-    def bbox(self, distance=500):
-        """Builds a bounding box around the center object in WGS84."""
-        return self._bbox(distance).bounds
 
     def plot(self, shape, name):
         """
@@ -119,7 +109,7 @@ class Mundi:
         return json.dumps({
             "type": "GeometryCollection",
             "geometries": geom_col.__geo_interface__['geometries'],
-            "properties": { k: (int(v) if isinstance(v, int) else (float(v) if isinstance(v, float) else str(v))) for (k, v) in res.items() if not isinstance(v, BaseGeometry)}
+            "properties": { k: (int(v) if isinstance(v, int) else (float(v) if isinstance(v, float) else str(v))) for (k, v) in res.features.items() if not isinstance(v, BaseGeometry)}
         })
 
     def q(self, fn, progressbar=False, n_start=None, n_end=None):
@@ -129,7 +119,8 @@ class Mundi:
 
         res_keys = None
         res_shapely_col = 'geometry'
-        res_outs = dict()
+        # list of mundipy geometries
+        res_outs = []
         # progressbar optional
         finiter = list(enumerate(unique_iterator))[n_start:n_end]
 
@@ -139,57 +130,43 @@ class Mundi:
         for idx, original_shape in finiter:
             # TODO fn(Q) can edit window
 
-            user_printed = None
-
             Q = MundiQ(original_shape, self.mapdata)
 
             # capture stdout
             with redirect_stdout(io.StringIO()) as f:
                 res = Q.call_process(fn)
-            user_printed = f.getvalue()
 
             # if res is None, skip
             if res is None:
                 continue
 
             # coerce to tuple
-            if not isinstance(res, dict):
-                raise TypeError('function passed to mundi.q() must return dict or None but instead got %s' % type(res).__name__)
+            if not isinstance(res, geom.BaseGeometry):
+                raise TypeError('value returned by process() must return mundipy geometry or None but instead got %s' % type(res).__name__)
+
+            res['_stdout'] = f.getvalue()
+            res['_id'] = idx
 
             # type check that keys are always the same
             # ignores _stdout and _id
             if res_keys is None:
-                res_keys = res.keys()
+                res_keys = res.features.keys()
 
-                for key, val in res.items():
-                    res_outs[key] = []
-
-                    if isinstance(val, BaseGeometry):
+                for key, val in res.features.items():
+                    if isinstance(val, geom.BaseGeometry):
                         res_shapely_col = key
 
-                if res_shapely_col == 'geometry':
-                    res_outs['geometry'] = []
+            elif res_keys != res.features.keys():
+                raise TypeError('value returned by process() returned features with different keys')
 
-                # internal columns
-                res_outs['_stdout'] = []
-                res_outs['_id'] = []
-            elif res_keys != res.keys():
-                raise TypeError('function passed to mundi.q() returned dict with different keys')
-
-            for key, val in res.items():
-                # returned straight from mundi.q()
-                # geometries should already be in EPSG:4326
-                res_outs[key].append(val)
-
-            if res_shapely_col == 'geometry':
-                res_outs['geometry'].append(original_shape)
-
-            res_outs['_stdout'].append(user_printed)
-            res_outs['_id'].append(idx)
+            res_outs.append(res)
 
         # if res_outs is empty, give a useful error message
         # creating a GeoDataFrame with an empty array gives an error
         if len(res_outs) == 0:
             raise ValueError('all results from mundi.q() process fn were None')
 
-        return gpd.GeoDataFrame(res_outs, crs='EPSG:4326', geometry=res_shapely_col)
+        return {
+            'type': 'FeatureCollection',
+            'features': [ res.__geo_interface__ for res in res_outs ]
+        }

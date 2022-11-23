@@ -206,6 +206,13 @@ class BaseGeometry():
 	def fast_bounds(self):
 		return self.transform('EPSG:4326')._geo.bounds
 
+	@property
+	def __geo_interface__(self):
+		"""Get a GeoJSON representation in EPSG:4326"""
+		return dict({
+			'properties': self.features
+			}, **self.transform('EPSG:4326')._geo.__geo_interface__)
+
 	def __getattr__(self, name):
 		if name in parent_methods(self.parent_class):
 			target = getattr(self.parent_class, name)

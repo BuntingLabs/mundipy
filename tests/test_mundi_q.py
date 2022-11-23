@@ -15,15 +15,14 @@ def test_mundi_q():
 
         print('should capture')
 
-        return {
-            'center': larger is None
-        }
+        return point
 
     outs = mundi.q(process)
+    feats = outs['features']
 
-    assert len(outs) == 3
-    assert len(outs['_stdout']) == 3
-    assert len(outs['_id']) == 3
+    assert len(feats) == 3
+    assert feats[0]['properties']['_stdout'] == 'should capture\n'
+    assert feats[0]['properties']['_id'] == 0
 
 def test_mundi_q_n():
     mundi = Mundi(Map({
@@ -31,13 +30,11 @@ def test_mundi_q_n():
         }), 'points', units='feet')
 
     def process(point):
-        return {
-            'center': 3.14
-        }
+        return point
 
     outs = mundi.q(process, n_start=1, n_end=2)
 
-    assert len(outs) == 1
+    assert len(outs['features']) == 1
 
 def test_mundi_q_badcolumn():
     mundi = Mundi(Map({
@@ -66,9 +63,9 @@ def test_mundi_q_inspect():
         }), 'points', units='feet')
 
     def correct_dataset(point, points, polygon):
-        return dict()
+        return point
     def not_in_mundi(point, not_in_mundi):
-        return dict()
+        return point
 
     mundi.q(correct_dataset)
 
@@ -86,7 +83,7 @@ def test_mundi_crs():
         if len(ints) > 0:
             plot(ints, 'texas')
 
-        return dict()
+        return point
 
     mundi.plot(process_points)
 
@@ -98,6 +95,6 @@ def test_no_pygeos():
     def process_points(neighborhood):
         plot(neighborhood, 'neighborhood')
 
-        return dict()
+        return neighborhood
 
     mundi.plot(process_points)

@@ -15,7 +15,7 @@ def test_plot_context():
     def process(coffeeshop):
         plot(coffeeshop, 'coffeeshop')
 
-        return coffeeshop.features
+        return coffeeshop
 
     outs = mundi.plot(process)
     assert isinstance(outs, str)
@@ -35,7 +35,7 @@ def test_plot_point():
         plot(enrich_geom(Point(1, 1), dict()), 'coffeeshop')
         plot(enrich_geom(LineString([[0, 0], [1, 1], [2, 2]]), dict()), 'line')
 
-        return coffeeshop.features
+        return coffeeshop
 
     outs = mundi.plot(process)
 

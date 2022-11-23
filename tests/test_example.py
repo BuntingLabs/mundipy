@@ -17,10 +17,11 @@ def test_coffeeshops():
         nearest_neighborhood = neighborhoods.nearest(coffeeshop)
         assert isinstance(nearest_neighborhood['name'], str)
 
-        return coffeeshop.features
+        return coffeeshop
 
     outs = mundi.q(process)
+    feats = outs['features']
 
-    assert len(outs) == 12
-    assert len(outs[outs['neighborhood_name'] == 'North Hollywood']) == 2
-    assert len(outs[outs['name'] == 'Philz Coffee']) == 1
+    assert len(feats) == 12
+    assert len([ f for f in feats if f['properties']['neighborhood_name'] == 'North Hollywood' ]) == 2
+    assert len([ f for f in feats if f['properties']['name'] == 'Philz Coffee' ]) == 1
