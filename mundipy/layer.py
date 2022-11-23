@@ -75,7 +75,7 @@ class Dataset:
 	@property
 	def _pool(self):
 		# 3 second timeout
-		return ConnectionPool(self._db_url, timeout=3.0, max_size=1)
+		return ConnectionPool(self._db_url, timeout=3.0, min_size=1, max_size=1)
 
 	@union_spatial_cache
 	def _load(self, geom):
