@@ -34,23 +34,26 @@
       "color": "#333"
     },
     {
-      "name": "Spatial IDE",
-      "url": "https://buntinglabs.com/solutions/spatial-ide",
+      "name": "Sandbox",
+      "url": "https://buntinglabs.com/solutions/gis-sandbox",
       "icon": "code",
       "color": "#48371c"
     }
   ],
   "navigation": [
     {
-      "group": "Introduction",
-      "pages": ["introduction", "quickstart"]
+      "group": "Overview",
+      "pages": ["introduction", "automatic-projections"]
     },
     {
-      "group": "User Manual",
-      "pages": ["loading-datasets", "geometric-operations", "querying-datasets", "automatic-projections"]
+      "group": "Tutorials",
+      "pages": ["quickstart"]
+    }, {
+      "group": "Reference Manual",
+      "pages": ["loading-datasets", "geometric-operations", "querying-datasets"]
     },
     {
-      "group": "Utilities",
+      "group": "Standalone APIs",
       "pages": ["projection-api", "spatial-union-cache", "spatial-footprint-cache"]
     }
   ],
