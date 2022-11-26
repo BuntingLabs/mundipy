@@ -314,6 +314,13 @@ class MultiPolygon(BaseGeometry):
 	def __init__(self, geo: geom.MultiPolygon, crs: str, features: dict):
 		super().__init__(geo, crs, features)
 
+class GeometryCollection(BaseGeometry):
+
+	parent_class = geom.GeometryCollection
+
+	def __init__(self, geo: geom.GeometryCollection, crs: str, features: dict):
+		super().__init__(geo, crs, features)
+
 def enrich_geom(geo, features, pcs='EPSG:4326'):
 	"""Enrich a shapely geometry with old features"""
 	if isinstance(geo, geom.Point):
@@ -324,5 +331,7 @@ def enrich_geom(geo, features, pcs='EPSG:4326'):
 		return Polygon(geo, pcs, features)
 	elif isinstance(geo, geom.MultiPolygon):
 		return MultiPolygon(geo, pcs, features)
+	elif isinstance(geo, geom.GeometryCollection):
+		return GeometryCollection(geo, pcs, features)
 	else:
-		raise TypeError('enrich_geom got %s, expected Point/LineString/Polygon/MultiPolygon' % str(type(geo)))
+		raise TypeError('enrich_geom got unsupported type %s' % str(type(geo)))
