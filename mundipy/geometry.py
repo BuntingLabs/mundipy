@@ -3,7 +3,7 @@ from functools import lru_cache, cached_property
 
 import shapely.geometry as geom
 from shapely.geometry import shape, box
-from shapely import transform
+from shapely import transform, GEOSException, make_valid
 import numpy as np
 
 from mundipy.cache import pyproj_transform
@@ -251,15 +251,30 @@ class BaseGeometry():
 					# if we don't return a geometric object, we immediately
 					# execute and return
 					if not attr_flags & RETURN_GEO:
-						return target(*custom_args, **kwargs)
+						# performing operations on invalid geometries can
+						# throw GEOSException, but .make_valid is expensive.
+						# We lazily repair invalid geometries upon error
+						try:
+							return target(*custom_args, **kwargs)
+						except GEOSException:
+							# make_valid repairs invalid geometries
+							repaired_args = [ make_valid(x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
 
-					# If we do return a geometry, there's a chance we need to
-					# reproject into the geographic coordinate system, but also
-					# a chance that we want to keep in the local projection.
-					# Because of this, we create the geometry from local, and
-					# will lazily transform to geographic if needed.
-					ret = target(*custom_args, **kwargs)
-					return enrich_geom(ret, self.features, pcs=projection)
+							return target(*repaired_args, **kwargs)
+
+					try:
+						# If we do return a geometry, there's a chance we need to
+						# reproject into the geographic coordinate system, but also
+						# a chance that we want to keep in the local projection.
+						# Because of this, we create the geometry from local, and
+						# will lazily transform to geographic if needed.
+						ret = target(*custom_args, **kwargs)
+						return enrich_geom(ret, self.features, pcs=projection)
+					except GEOSException:
+						repaired_args = [ make_valid(x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
+
+						ret = target(*repaired_args, **kwargs)
+						return enrich_geom(ret, self.features, pcs=projection)
 
 				return projection_wrapper
 			elif isinstance(target, property):
