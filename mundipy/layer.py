@@ -149,6 +149,21 @@ class Dataset:
 		potentially_intersecting = self.inside_bbox(bbox)
 		return list(filter(lambda g: g.intersects(geom), potentially_intersecting))
 
+	def within(self, radius, geom):
+		"""
+		Returns an `Iterator` of mundipy geometries that are
+		no farther than the given radius from geom.
+		"""
+		if not isinstance(geom, BaseGeometry):
+			raise TypeError('geom is not mundipy.geometry')
+		if not isinstance(radius, float) and not isinstance(radius, int):
+			raise TypeError('radius passed to within() is neither float nor int')
+
+		# buffer to create intersection zone
+		zone = geom.buffer(radius)
+
+		return self.intersects(zone)
+
 	def nearest(self, geom):
 		"""
 		Returns the nearest feature in this collection to the passed
