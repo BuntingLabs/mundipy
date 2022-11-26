@@ -61,3 +61,20 @@ Calculate a result based on two geometries.
 <AccordionGroup>
   <Accordion title="object.distance(other)" icon="arrows-up-down"></Accordion>
 </AccordionGroup>
+
+## Invalid Geometries
+
+Mundipy gracefully resolves invalid geometries during spatial operations
+with the `shapely.make_valid` method. This means datasets require no
+pre-processing for spatial operations.
+
+Many real-world datasets encode geometries with invalid sets of points.
+This triggers errors like the following in LibGEOS:
+
+```
+GEOSException: TopologyException: Input geom 1 is invalid: Ring Self-intersection
+```
+
+Validating an entire dataset pre-emptively with `.buffer(0)` or `shapely.make_valid`
+is an expensive preprocessing step. Mundipy avoids this by catching `GEOSException`
+in spatial operations and automatically re-trying the operation with a valid geometry.
