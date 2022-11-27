@@ -1,6 +1,6 @@
 import pytest
 
-from mundipy.layer import Dataset
+from mundipy.dataset import Dataset
 from mundipy.geometry import enrich_geom
 import mundipy.geometry as geom
 

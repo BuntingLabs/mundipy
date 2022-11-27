@@ -14,7 +14,7 @@ from shapely.geometry.collection import GeometryCollection
 from shapely.geometry.base import BaseGeometry
 
 from mundipy.map import Map
-from mundipy.layer import Dataset
+from mundipy.dataset import Dataset
 from mundipy.pcs import choose_pcs, NoProjectionFoundError
 from mundipy.cache import pyproj_transform
 from mundipy.geometry import enrich_geom

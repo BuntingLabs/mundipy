@@ -1,5 +1,5 @@
 
-from .layer import Dataset
+from .dataset import Dataset
 
 """Map represents multiple Datasets of data, intended to be combined."""
 class Map:
