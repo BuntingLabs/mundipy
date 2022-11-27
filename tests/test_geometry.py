@@ -10,6 +10,9 @@ from shapely import from_wkt, GEOSException
 def test_geometry():
     df = Dataset('tests/fixtures/polygon.geojson')
 
+    # dataset __len__
+    assert len(df) == 1
+
     geom = list(df)
 
     assert len(geom) == 1

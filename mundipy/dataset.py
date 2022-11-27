@@ -128,6 +128,12 @@ class Dataset:
 		"""
 		yield from self.geometry_collection()
 
+	def __len__(self):
+		if self.filename is None:
+			raise TypeError('Dataset.__len__ not implemented for PostGIS tables')
+
+		return len(fiona.open(self.filename))
+
 	def intersects(self, geom):
 		"""
 		Returns an `Iterator` of mundipy geometries that intersect
