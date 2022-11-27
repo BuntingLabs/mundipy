@@ -16,21 +16,12 @@ def test_geometry():
     geom = list(df)
 
     assert len(geom) == 1
-    assert geom[0].area > 800 and geom[0].area < 900
+    # fictitious polygon
+    assert geom[0].area == pytest.approx(7865519140303.677)
     assert geom[0]['name'] == 'example_property'
 
     geom[0]['name'] = 'new_name'
     assert geom[0]['name'] == 'new_name'
-
-def test_geometry_from_row():
-    df = Dataset('tests/fixtures/polygon.geojson')
-
-    geom = list(df)[0]
-    assert geom.area > 800 and geom.area < 900
-    assert geom['name'] == 'example_property'
-
-    geom['name'] = 'new_name'
-    assert geom['name'] == 'new_name'
 
 def test_multi_polygon():
     outer = enrich_geom(Polygon([[25.273428697681624,6.026182562140747],[26.063011790518573,-7.9853706778425675],[30.13724140836942,-8.088943835912445],[30.13782361496999,6.078309828324564],[25.273428697681624,6.026182562140747]]), dict())
@@ -53,6 +44,17 @@ def test_invalid_geometry_ops():
     # no error
     res = mfoo.difference(mbar)
     assert res.area == 0.0
+
+def test_local_properties():
+    # an outline of the paris urban area
+    paris = from_wkt('POLYGON ((2.1920900667610113 48.95792877415394, 2.154649820686018 48.89855338018583, 2.154649820686018 48.83230904559585, 2.208873625347394 48.742995477507094, 2.3005376760825698 48.70211346591506, 2.398656941658629 48.72085517951464, 2.4735374338087013 48.76682797269828, 2.572947742352227 48.811058328366954, 2.5355074962771766 48.91043410745752, 2.4051121564982623 48.99267300641242, 2.3108660198269604 49.00283746919706, 2.1920900667610113 48.95792877415394))')
+    local_paris = enrich_geom(paris, dict())
+
+    # for order of magnitude checks, a la wolfram alpha:
+    # 0.65x the area of hong kong
+    assert local_paris.area == pytest.approx(723011286.0469426)
+    # 3.7x the large hadron colider circumference
+    assert local_paris.length == pytest.approx(98778.35201223548)
 
 def test_fast_bounds():
     paris = from_wkt('POLYGON ((2.1920900667610113 48.95792877415394, 2.154649820686018 48.89855338018583, 2.154649820686018 48.83230904559585, 2.208873625347394 48.742995477507094, 2.3005376760825698 48.70211346591506, 2.398656941658629 48.72085517951464, 2.4735374338087013 48.76682797269828, 2.572947742352227 48.811058328366954, 2.5355074962771766 48.91043410745752, 2.4051121564982623 48.99267300641242, 2.3108660198269604 49.00283746919706, 2.1920900667610113 48.95792877415394))')
