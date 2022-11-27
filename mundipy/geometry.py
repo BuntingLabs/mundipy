@@ -202,9 +202,27 @@ class BaseGeometry():
 	def __setitem__(self, item, value):
 		self.features[item] = value
 
-	@property
+	@cached_property
 	def fast_bounds(self):
-		return self.transform('EPSG:4326')._geo.bounds
+		# because PCS (traditionally) use northing and easting
+		# as positive and this matches with EPSG:4326 generally,
+		# let's use this to calculate fast bounds for PCS finding
+
+		# avoid transformer altogether
+		if self.crs == 'EPSG:4326':
+			return self._geo.bounds
+
+		# this creates an *approximate* bounds of the polygon,
+		# but does it very fast - for use only in the projection
+		# selection algorithm
+		transformer = pyproj_transform(self.crs, 'EPSG:4326')
+
+		minx, miny, maxx, maxy = self._geo.bounds
+
+		minx, miny = transformer(minx, miny)
+		maxx, maxy = transformer(maxx, maxy)
+
+		return (minx, miny, maxx, maxy)
 
 	@property
 	def __geo_interface__(self):
