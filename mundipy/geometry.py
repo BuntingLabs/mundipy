@@ -234,90 +234,90 @@ class BaseGeometry():
 		}
 
 	def __getattr__(self, name):
-		if name in parent_methods(self.parent_class):
-			target = getattr(self.parent_class, name)
+		if name not in parent_methods(self.parent_class):
+			raise AttributeError('"%s" has no attribute "%s"' % (str(type(self)), name))
 
-			# bind to self if callable
-			if isinstance(target, property):
-				# some properties are calculated in a local projection
-				attr_flags = SHAPELY_METHODS[name] if name in SHAPELY_METHODS else 0
+		target = getattr(self.parent_class, name)
 
-				# default to WGS84
-				projection = 'EPSG:4326'
+		# bind to self if callable
+		if isinstance(target, property):
+			# some properties are calculated in a local projection
+			attr_flags = SHAPELY_METHODS[name] if name in SHAPELY_METHODS else 0
+
+			# default to WGS84
+			projection = 'EPSG:4326'
+			if attr_flags & TRANSFORM_INPUT:
+				# wrap in appropriate PCS
+				projection = choose_pcs(box(*self.fast_bounds), units='meters')['crs']
+
+			# perform op in chosen coordinate system
+			ret = target.fget(self.transform(projection)._geo)
+
+			if not attr_flags & RETURN_GEO:
+				return ret
+
+			# transform geometry out
+			return enrich_geom(ret, self.features, pcs=projection)
+
+		elif callable(target):
+			# get attribute flags
+			attr_flags = SHAPELY_METHODS[name]
+
+			def projection_wrapper(*args, **kwargs):
+				# wrapper function for any method that could require
+				# projecting to a cartesian coordinate plane
+				custom_args = [self, *args]
+
+				# many methods require that we transform the self and other
+				# arguments to a local projection before executing the op
 				if attr_flags & TRANSFORM_INPUT:
 					# wrap in appropriate PCS
-					projection = choose_pcs(box(*self.fast_bounds), units='meters')['crs']
+					# get total bounds (minx, miny, maxx, maxy)
+					total_bounds = [ obj.fast_bounds for obj in args if isinstance(obj, BaseGeometry) ] + [ self.fast_bounds ]
+					total_bounds = ( min(map(lambda b: b[0], total_bounds)), min(map(lambda b: b[1], total_bounds)),
+									 max(map(lambda b: b[2], total_bounds)), max(map(lambda b: b[3], total_bounds)) )
 
-				# perform op in chosen coordinate system
-				ret = target.fget(self.transform(projection)._geo)
+					projection = choose_pcs(box(*total_bounds), units='meters')['crs']
 
+					# convert to projections and raw shapely objects
+					# pass through if floats, other types, etc
+					# beware of double projecting, which is why we do shapely first, then mundipy geometries
+					transformer = pyproj_transform('EPSG:4326', projection)
+					custom_args = [ transform(transformer, x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
+
+					custom_args = [ x.transform(projection)._geo if isinstance(x, BaseGeometry) else x for x in custom_args ]
+
+				# if we don't return a geometric object, we immediately
+				# execute and return
 				if not attr_flags & RETURN_GEO:
-					return ret
-
-				# transform geometry out
-				return enrich_geom(ret, self.features, pcs=projection)
-
-			elif callable(target):
-				# get attribute flags
-				attr_flags = SHAPELY_METHODS[name]
-
-				def projection_wrapper(*args, **kwargs):
-					# wrapper function for any method that could require
-					# projecting to a cartesian coordinate plane
-					custom_args = [self, *args]
-
-					# many methods require that we transform the self and other
-					# arguments to a local projection before executing the op
-					if attr_flags & TRANSFORM_INPUT:
-						# wrap in appropriate PCS
-						# get total bounds (minx, miny, maxx, maxy)
-						total_bounds = [ obj.fast_bounds for obj in args if isinstance(obj, BaseGeometry) ] + [ self.fast_bounds ]
-						total_bounds = ( min(map(lambda b: b[0], total_bounds)), min(map(lambda b: b[1], total_bounds)),
-										 max(map(lambda b: b[2], total_bounds)), max(map(lambda b: b[3], total_bounds)) )
-
-						projection = choose_pcs(box(*total_bounds), units='meters')['crs']
-
-						# convert to projections and raw shapely objects
-						# pass through if floats, other types, etc
-						# beware of double projecting, which is why we do shapely first, then mundipy geometries
-						transformer = pyproj_transform('EPSG:4326', projection)
-						custom_args = [ transform(transformer, x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
-
-						custom_args = [ x.transform(projection)._geo if isinstance(x, BaseGeometry) else x for x in custom_args ]
-
-					# if we don't return a geometric object, we immediately
-					# execute and return
-					if not attr_flags & RETURN_GEO:
-						# performing operations on invalid geometries can
-						# throw GEOSException, but .make_valid is expensive.
-						# We lazily repair invalid geometries upon error
-						try:
-							return target(*custom_args, **kwargs)
-						except GEOSException:
-							# make_valid repairs invalid geometries
-							repaired_args = [ make_valid(x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
-
-							return target(*repaired_args, **kwargs)
-
+					# performing operations on invalid geometries can
+					# throw GEOSException, but .make_valid is expensive.
+					# We lazily repair invalid geometries upon error
 					try:
-						# If we do return a geometry, there's a chance we need to
-						# reproject into the geographic coordinate system, but also
-						# a chance that we want to keep in the local projection.
-						# Because of this, we create the geometry from local, and
-						# will lazily transform to geographic if needed.
-						ret = target(*custom_args, **kwargs)
-						return enrich_geom(ret, self.features, pcs=projection)
+						return target(*custom_args, **kwargs)
 					except GEOSException:
+						# make_valid repairs invalid geometries
 						repaired_args = [ make_valid(x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
 
-						ret = target(*repaired_args, **kwargs)
-						return enrich_geom(ret, self.features, pcs=projection)
+						return target(*repaired_args, **kwargs)
 
-				return projection_wrapper
-			else:
-				return target
+				try:
+					# If we do return a geometry, there's a chance we need to
+					# reproject into the geographic coordinate system, but also
+					# a chance that we want to keep in the local projection.
+					# Because of this, we create the geometry from local, and
+					# will lazily transform to geographic if needed.
+					ret = target(*custom_args, **kwargs)
+					return enrich_geom(ret, self.features, pcs=projection)
+				except GEOSException:
+					repaired_args = [ make_valid(x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
+
+					ret = target(*repaired_args, **kwargs)
+					return enrich_geom(ret, self.features, pcs=projection)
+
+			return projection_wrapper
 		else:
-			raise AttributeError('"%s" has no attribute "%s"' % (str(type(self)), name))
+			return target
 
 class Point(BaseGeometry):
 

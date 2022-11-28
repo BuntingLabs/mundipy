@@ -31,6 +31,12 @@ def test_multi_polygon():
 
     assert isinstance(subbed, geom.MultiPolygon)
 
+def test_attr_error():
+    pt = enrich_geom(Point(-104.991531, 39.742043), { 'feat': 'test' })
+
+    with pytest.raises(AttributeError, match='foobar'):
+        pt.foobar()
+
 def test_project_properties():
     pt = enrich_geom(Point(-104.991531, 39.742043), { 'feat': 'test' })
 
