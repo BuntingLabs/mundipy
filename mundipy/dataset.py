@@ -15,7 +15,6 @@ import shapely.wkt
 import shapely.wkb
 from shapely.ops import transform
 from functools import lru_cache, partial
-from cached_property import cached_property_with_ttl
 import psycopg
 import fiona
 from psycopg_pool import ConnectionPool
