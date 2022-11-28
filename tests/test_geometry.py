@@ -4,7 +4,7 @@ from mundipy.dataset import Dataset
 from mundipy.geometry import enrich_geom
 import mundipy.geometry as geom
 
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Point, Polygon, MultiPolygon
 from shapely import from_wkt, GEOSException
 
 def test_geometry():
@@ -30,6 +30,14 @@ def test_multi_polygon():
     subbed = outer.difference(inner)
 
     assert isinstance(subbed, geom.MultiPolygon)
+
+def test_project_properties():
+    pt = enrich_geom(Point(-104.991531, 39.742043), { 'feat': 'test' })
+
+    assert isinstance(pt, geom.Point)
+    assert pt.centroid.features['feat'] == 'test'
+    center = pt.centroid
+    assert center['feat'] == 'test'
 
 def test_invalid_geometry_ops():
     foo = from_wkt('POLYGON((0 0, 0 1, 2 1, 2 2, 1 2, 1 0, 0 0))')

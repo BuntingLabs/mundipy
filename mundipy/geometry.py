@@ -240,16 +240,23 @@ class BaseGeometry():
 			# bind to self if callable
 			if isinstance(target, property):
 				# some properties are calculated in a local projection
-				attr_flags = SHAPELY_METHODS[name]
+				attr_flags = SHAPELY_METHODS[name] if name in SHAPELY_METHODS else 0
 
+				# default to WGS84
+				projection = 'EPSG:4326'
 				if attr_flags & TRANSFORM_INPUT:
 					# wrap in appropriate PCS
 					projection = choose_pcs(box(*self.fast_bounds), units='meters')['crs']
 
-					return target.fget(self.transform(projection)._geo)
+				# perform op in chosen coordinate system
+				ret = target.fget(self.transform(projection)._geo)
 
-				# if no transform, perform op in WGS84
-				return target.fget(self.transform('EPSG:4326')._geo)
+				if not attr_flags & RETURN_GEO:
+					return ret
+
+				# transform geometry out
+				return enrich_geom(ret, self.features, pcs=projection)
+
 			elif callable(target):
 				# get attribute flags
 				attr_flags = SHAPELY_METHODS[name]
