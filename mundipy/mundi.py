@@ -64,7 +64,7 @@ class MundiQ:
             raise TypeError('mundipy.plot() requires mundipy BaseGeometry but got "%s"' % type(shape))
 
         # fix shapes
-        shape = shape.transform('EPSG:4326')._geo
+        shape = shape.as_shapely('EPSG:4326')
         if isinstance(shape, Polygon) or isinstance(shape, MultiPolygon):
             shape = shape.buffer(0)
 

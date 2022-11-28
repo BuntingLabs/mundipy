@@ -183,18 +183,17 @@ class BaseGeometry():
 		return self._geo_val
 
 	@lru_cache(maxsize=4)
-	def transform(self, to_crs):
-		# no transform needed
+	def as_shapely(self, to_crs):
+		""" Take the geometry as a shapely object in a coordinate system. """
 		if to_crs == self.crs:
-			return self
+			return self._geo
 
 		transformer = pyproj_transform(self.crs, to_crs)
 		def np_transform(pts):
 			fx, fy = transformer(pts[:, 0], pts[:, 1])
 			return np.dstack([fx, fy])[0]
 
-		newpoly = transform(self._geo, np_transform)
-		return enrich_geom(newpoly, self.features, pcs=to_crs)
+		return transform(self._geo, np_transform)
 
 	def __getitem__(self, item):
 		return self.features[item]
@@ -229,7 +228,7 @@ class BaseGeometry():
 		"""Get a GeoJSON representation in EPSG:4326"""
 		return {
 			'type': 'Feature',
-			'geometry': self.transform('EPSG:4326')._geo.__geo_interface__,
+			'geometry': self.as_shapely('EPSG:4326').__geo_interface__,
 			'properties': self.features
 		}
 
@@ -251,7 +250,7 @@ class BaseGeometry():
 				projection = choose_pcs(box(*self.fast_bounds), units='meters')['crs']
 
 			# perform op in chosen coordinate system
-			ret = target.fget(self.transform(projection)._geo)
+			ret = target.fget(self.as_shapely(projection))
 
 			if not attr_flags & RETURN_GEO:
 				return ret
@@ -285,7 +284,7 @@ class BaseGeometry():
 					transformer = pyproj_transform('EPSG:4326', projection)
 					custom_args = [ transform(transformer, x) if isinstance(x, geom.base.BaseGeometry) else x for x in custom_args ]
 
-					custom_args = [ x.transform(projection)._geo if isinstance(x, BaseGeometry) else x for x in custom_args ]
+					custom_args = [ x.as_shapely(projection) if isinstance(x, BaseGeometry) else x for x in custom_args ]
 
 				# if we don't return a geometric object, we immediately
 				# execute and return
