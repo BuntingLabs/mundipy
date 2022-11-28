@@ -2,6 +2,7 @@
 *.ipynb
 __pycache__
 poetry.lock
+.python-version
 
 # data formats
 *.csv
