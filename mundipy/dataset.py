@@ -129,9 +129,16 @@ class Dataset:
 
 	def __len__(self):
 		if self.filename is None:
-			raise TypeError('Dataset.__len__ not implemented for PostGIS tables')
+			raise NotImplementedError('Dataset.__len__ not implemented for PostGIS tables')
 
 		return len(fiona.open(self.filename))
+
+	@property
+	def bounds(self):
+		if self.filename is None:
+			raise NotImplementedError('Dataset.bounds not implemented for PostGIS table')
+
+		return fiona.open(self.filename).bounds
 
 	def intersects(self, geom):
 		"""

@@ -12,6 +12,7 @@ def test_geometry():
 
     # dataset __len__
     assert len(df) == 1
+    assert df.bounds == pytest.approx((-125.859375, 27.994401411046148, -81.2109375, 49.15296965617042))
 
     geom = list(df)
 
