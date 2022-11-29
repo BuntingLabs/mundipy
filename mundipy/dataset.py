@@ -166,7 +166,7 @@ class Dataset:
 		Returns an `Iterator` of mundipy geometries that are
 		no farther than the given radius from geom.
 		"""
-		if not isinstance(geom, BaseGeometry):
+		if not isinstance(geom, mgeom.BaseGeometry):
 			raise TypeError('geom is not mundipy.geometry')
 		if not isinstance(radius, float) and not isinstance(radius, int):
 			raise TypeError('radius passed to within() is neither float nor int')
