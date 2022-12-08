@@ -382,3 +382,12 @@ def loads(obj):
 		raise ValueError('mundipy.geometry.loads expects features to be a list')
 
 	return [ enrich_geom(shape(f['geometry']), f['properties']) for i, f in enumerate(obj['features']) ]
+
+def dumps(features):
+	if not isinstance(features, list):
+		raise TypeError('mundipy.geometry.dumps expects list of features')
+
+	return {
+		'type': 'FeatureCollection',
+		'features': [ f.__geo_interface__ for f in features ]
+	}
