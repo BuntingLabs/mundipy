@@ -1,5 +1,6 @@
 import json
 from functools import lru_cache, cached_property
+from collections.abc import Sequence
 
 import shapely.geometry as geom
 from shapely.geometry import shape, box
@@ -172,8 +173,12 @@ class BaseGeometry():
 	def __init__(self, geo, crs: str, features: dict):
 		self.features = features
 		self.crs = crs
-		# could be a function, could be a value
-		self._geo_val = geo
+		# either a function generating a shapely.geometry, or a value
+		# if the value is a sequence, pass it to the constructor
+		if isinstance(geo, Sequence):
+			self._geo_val = self.parent_class(geo)
+		else:
+			self._geo_val = geo
 
 	@property
 	def _geo(self):

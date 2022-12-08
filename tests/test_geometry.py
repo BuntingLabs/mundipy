@@ -1,10 +1,10 @@
 import pytest
 
 from mundipy.dataset import Dataset
-from mundipy.geometry import enrich_geom
+from mundipy.geometry import enrich_geom, Point, MultiPolygon
 import mundipy.geometry as geom
 
-from shapely.geometry import Point, Polygon, MultiPolygon
+import shapely.geometry
 from shapely import from_wkt, GEOSException
 
 def test_geometry():
@@ -24,24 +24,32 @@ def test_geometry():
     geom[0]['name'] = 'new_name'
     assert geom[0]['name'] == 'new_name'
 
+def test_constructor():
+    pt = Point((-104.991531, 39.742043), 'EPSG:4326', { 'feat': 'test' })
+
+    assert isinstance(pt, Point)
+    assert pt.centroid.features['feat'] == 'test'
+    center = pt.centroid
+    assert center['feat'] == 'test'
+
 def test_multi_polygon():
-    outer = enrich_geom(Polygon([[25.273428697681624,6.026182562140747],[26.063011790518573,-7.9853706778425675],[30.13724140836942,-8.088943835912445],[30.13782361496999,6.078309828324564],[25.273428697681624,6.026182562140747]]), dict())
-    inner = enrich_geom(Polygon([[18.381743157653403,-1.3600556177262746],[18.313380419378433,-4.991685343163752],[39.81788374424539,-5.007774504721652],[39.62298421833077,-0.6253503748207265],[18.381743157653403,-1.3600556177262746]]), dict())
+    outer = enrich_geom(shapely.geometry.Polygon([[25.273428697681624,6.026182562140747],[26.063011790518573,-7.9853706778425675],[30.13724140836942,-8.088943835912445],[30.13782361496999,6.078309828324564],[25.273428697681624,6.026182562140747]]), dict())
+    inner = enrich_geom(shapely.geometry.Polygon([[18.381743157653403,-1.3600556177262746],[18.313380419378433,-4.991685343163752],[39.81788374424539,-5.007774504721652],[39.62298421833077,-0.6253503748207265],[18.381743157653403,-1.3600556177262746]]), dict())
 
     subbed = outer.difference(inner)
 
-    assert isinstance(subbed, geom.MultiPolygon)
+    assert isinstance(subbed, MultiPolygon)
 
 def test_attr_error():
-    pt = enrich_geom(Point(-104.991531, 39.742043), { 'feat': 'test' })
+    pt = enrich_geom(shapely.geometry.Point(-104.991531, 39.742043), { 'feat': 'test' })
 
     with pytest.raises(AttributeError, match='foobar'):
         pt.foobar()
 
 def test_project_properties():
-    pt = enrich_geom(Point(-104.991531, 39.742043), { 'feat': 'test' })
+    pt = enrich_geom(shapely.geometry.Point(-104.991531, 39.742043), { 'feat': 'test' })
 
-    assert isinstance(pt, geom.Point)
+    assert isinstance(pt, Point)
     assert pt.centroid.features['feat'] == 'test'
     center = pt.centroid
     assert center['feat'] == 'test'
