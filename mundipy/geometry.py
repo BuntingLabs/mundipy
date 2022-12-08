@@ -373,3 +373,12 @@ def enrich_geom(geo, features, pcs='EPSG:4326'):
 		return GeometryCollection(geo, pcs, features)
 	else:
 		raise TypeError('enrich_geom got unsupported type %s' % str(type(geo)))
+
+def loads(obj):
+	if 'type' not in obj or obj['type'] != 'FeatureCollection':
+		raise ValueError('mundipy.geometry.loads expects type=FeatureCollection')
+
+	if 'features' not in obj or not isinstance(obj['features'], list):
+		raise ValueError('mundipy.geometry.loads expects features to be a list')
+
+	return [ enrich_geom(shape(f['geometry']), f['properties']) for i, f in enumerate(obj['features']) ]

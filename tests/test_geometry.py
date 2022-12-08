@@ -1,7 +1,8 @@
 import pytest
+import json
 
 from mundipy.dataset import Dataset
-from mundipy.geometry import enrich_geom, Point, MultiPolygon
+from mundipy.geometry import enrich_geom, Point, MultiPolygon, loads
 import mundipy.geometry as geom
 
 import shapely.geometry
@@ -106,3 +107,12 @@ def test_benchmark_fast_bounds(benchmark):
 
     # very generous bound, unfortunately it's needed
     assert result == pytest.approx(closest_realistic_bounds, 0.1)
+
+
+def test_loads():
+    with open('tests/fixtures/polygon.geojson', 'r') as f:
+        res = loads(json.loads(f.read()))
+
+        assert len(res) == 1
+        assert res[0]['name'] == 'example_property'
+        assert len(res[0].exterior.coords) == 6
