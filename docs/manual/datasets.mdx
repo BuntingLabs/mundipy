@@ -1,0 +1,107 @@
+---
+title: "Loading and Querying Datasets"
+sidebarTitle: "Datasets"
+description: "Loading and querying spatial datasets from vector files or PostGIS."
+---
+
+Mundipy supports loading and querying any vector dataset supported by [GDAL](https://gdal.org/) and tables from PostGIS. This includes Shapefiles, GeoJSON, FlatGeobufs, and KMLs, with a [full list of drivers available here](https://gdal.org/drivers/vector/index.html).
+
+<Note>**Lazy loading:** When a dataset is instantiated, it won't automatically be loaded into memory. Data
+is lazy loaded only when useful and cleared from the cache when not needed.</Note>
+
+## Loading vector datasets
+
+### Files from disk
+
+Passing a filename as the first argument loads a vector file from disk:
+
+```py
+from mundipy.dataset import Dataset
+
+ds = Dataset('starbucks_in_seattle.shp')
+
+print('Loaded %d coffeeshops' % len(ds))
+# -> Loaded 308 coffeeshops
+```
+
+### Files over http/https
+
+Mundipy will automatically download relevant parts of a remote file when you
+pass a URL:
+
+<Warning>This performs best with cloud native file formats like [FlatGeobuf](https://flatgeobuf.org/). Other formats will be downloaded in their entirely, which is very slow.</Warning>
+
+```py
+from mundipy.dataset import Dataset
+
+ds = Dataset('https://pub-f49c63ed10ee494eb0deeb568b66f33f.r2.dev/trails.fgb')
+
+print('Loaded %d trails' % len(ds))
+# -> Loaded 5885 trails
+```
+
+### PostGIS table
+
+To download from a PostGIS table, pass the connection URL along with the table name:
+
+```py
+from mundipy.dataset import Dataset
+
+ds = Dataset({
+    'url': "postgresql://postgres@localhost:5432/postgres",
+    'table': 'nyc_boroughs'
+})
+
+print('Loaded %d boroughs' % len([ borough for borough in ds ]))
+# -> Loaded 5 boroughs
+```
+
+If a [loaded dataset](/loading-datasets) is from PostGIS or is a Shapefile or FlatGeobuf,
+we can use the spatial index to query a subset of the data.
+
+<Tip>Converting other vector file formats [to FlatGeobuf with ogr2ogr](https://buntinglabs.com/tools/ogr2ogr-command-builder) results in significant performance improvements.</Tip>
+
+## Querying datasets
+
+### Intersection
+
+We can get a list of geometries that intersect with a given geometry by
+using `ds.intersects(geom)`.
+
+```py
+intersects = ds.intersects(geom)
+
+print(intersects)
+# [<mundipy.geometry.Point object at 0x10e4f8160>, <mundipy.geometry.Point object at 0x10e435fc0>, <mundipy.geometry.Point object at 0x1115c1720>]
+```
+
+### Nearest
+
+This returns the geometry that is closest to the given geometry. Useful
+for nearest neighbor queries.
+
+Returns `None` if the dataset is empty.
+
+```py
+pt = ds.nearest(geom)
+
+print(pt)
+# <mundipy.geometry.Point object at 0x10e4f8160>
+```
+
+### Within
+
+Returns a list of geometries that fall within a certain radius of the given geometry.
+
+Useful for finding all of the points of interest near an area. Geometry does *not* have to be a `Point`.
+
+<Note>Meters are the unit for the radius calculation.</Note>
+
+```py
+pois_in_walking_distance = ds.within(1200, geom)
+
+print(pois_in_walking_distance)
+# [<mundipy.geometry.Point object at 0x10e4f8160>, <mundipy.geometry.Point object at 0x10e435fc0>]
+```
+
+This is equivalent to calling `ds.intersects(geom.buffer(1200))`.

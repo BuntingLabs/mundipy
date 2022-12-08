@@ -50,7 +50,7 @@
       "pages": ["tutorials/catchment-area"]
     }, {
       "group": "Reference Manual",
-      "pages": ["loading-datasets", "geometric-operations", "querying-datasets"]
+      "pages": ["manual/datasets", "manual/geometric-operations"]
     },
     {
       "group": "Standalone APIs",

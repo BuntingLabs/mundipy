@@ -1,0 +1,124 @@
+---
+title: "Geometric Operations"
+description: "Using shapely operations inside mundi.py"
+---
+
+<Tip>This page features the most popular geometric operations, but far more are available. A full list of shapely operations can be found in the [shapely user manual](https://shapely.readthedocs.io/en/stable/manual.html).</Tip>
+
+## Common Shapely Operations
+
+### Boolean operations
+
+These shapely operations can be used in conditionals.
+
+<AccordionGroup>
+  <Accordion title="object.almost_equals(other)" icon="tilde">
+  	Returns `True` if the object is approximately equal to the other at all points to specified decimal place precision.
+  </Accordion>
+  <Accordion title="object.contains(other)" icon="border-outer">
+    Returns `True` if the geometry contains the other, else `False`
+  </Accordion>
+  <Accordion title="object.intersects(other)" icon="diagram-venn">
+    Returns `True` if geometries intersect, else `False`
+  </Accordion>
+  <Accordion title="object.overlaps(other)" icon="diagram-venn">
+    Returns `True` if geometries overlap, else `False`
+  </Accordion>
+</AccordionGroup>
+
+### Shape generators
+
+These methods create a new shapely geometry based on the relationship between
+the passed geometries.
+
+<AccordionGroup>
+  <Accordion title="object.difference(other)" icon="object-subtract">
+    Returns the difference of the geometries.
+  </Accordion>
+  <Accordion title="object.intersection(other)" icon="object-intersect">
+    Returns the intersection of the geometries.
+  </Accordion>
+  <Accordion title="object.symmetric_difference(other)" icon="object-exclude">
+    Returns the symmetric difference of the geometries.
+  </Accordion>
+  <Accordion title="object.union(other)" icon="object-union">
+    Returns the union of the geometries.
+  </Accordion>
+</AccordionGroup>
+
+### Shape modifiers
+
+These methods return a modified version of `object` after a transformation.
+
+<Note>Size and tolerance are both in meters.</Note>
+
+<AccordionGroup>
+  <Accordion title="object.buffer(size)" icon="maximize">
+    Get a geometry that represents all points within a distance of this geometry.
+
+    A positive distance produces a dilation, a negative distance an erosion. A very small or zero distance may sometimes be used to “tidy” a polygon.
+  </Accordion>
+  <Accordion title="object.simplify(tolerance)" icon="object-intersect">
+    Returns a simplified geometry produced by the Douglas-Peucker algorithm
+
+    Coordinates of the simplified geometry will be no more than the tolerance distance from the original. Unless the topology preserving option is used, the algorithm may produce self-intersecting or otherwise invalid geometries.
+  </Accordion>
+</AccordionGroup>
+
+### Properties
+
+These properties are defined on all shapely geometries.
+
+<Note>Properties like `length` and `area` use units of meters and square meters when appropriate.</Note>
+
+<AccordionGroup>
+  <Accordion title="object.boundary" icon="border-outer">
+    Returns a lower dimension geometry that bounds the object
+
+    The boundary of a polygon is a line, the boundary of a line is a collection of points. The boundary of a point is an empty (null) collection.
+  </Accordion>
+  <Accordion title="object.centroid" icon="location-pin">
+    Returns the geometric center of the object
+  </Accordion>
+  <Accordion title="object.envelope" icon="send-backward">
+    A figure that envelopes the geometry
+  </Accordion>
+  <Accordion title="object.area" icon="border-outer">
+    Area of the geometry (float)
+  </Accordion>
+  <Accordion title="object.bounds" icon="rectangle">
+    Returns minimum bounding region (minx, miny, maxx, maxy)
+  </Accordion>
+  <Accordion title="object.length" icon="ruler">
+    Length of the geometry (float)
+  </Accordion>
+</AccordionGroup>
+
+### Methods
+
+Calculate a result based on two geometries.
+
+<Note>Distance is calculated in meters.</Note>
+
+<AccordionGroup>
+  <Accordion title="object.distance(other)" icon="arrows-up-down">
+    Distance to other geometry (float)
+  </Accordion>
+</AccordionGroup>
+
+## Invalid Geometries
+
+Mundipy gracefully resolves invalid geometries during spatial operations
+with the `shapely.make_valid` method. This means datasets require no
+pre-processing for spatial operations.
+
+Many real-world datasets encode geometries with invalid sets of points.
+This triggers errors like the following in LibGEOS:
+
+```
+GEOSException: TopologyException: Input geom 1 is invalid: Ring Self-intersection
+```
+
+Validating an entire dataset pre-emptively with `.buffer(0)` or `shapely.make_valid`
+is an expensive preprocessing step. Mundipy avoids this by catching `GEOSException`
+in spatial operations and automatically re-trying the operation with a valid geometry.
