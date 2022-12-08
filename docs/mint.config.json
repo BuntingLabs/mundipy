@@ -54,7 +54,17 @@
     },
     {
       "group": "Standalone APIs",
-      "pages": ["projection-api", "spatial-union-cache", "spatial-footprint-cache"]
+      "pages": [
+        "projection-api",
+        "spatial-union-cache",
+        "spatial-footprint-cache",
+        {
+          "group": "3rd Party",
+          "pages": [
+            "third-party-apis/isochrones"
+          ]
+        }
+      ]
     }
   ],
   "footerSocials": {
