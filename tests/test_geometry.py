@@ -2,7 +2,7 @@ import pytest
 import json
 
 from mundipy.dataset import Dataset
-from mundipy.geometry import enrich_geom, Point, MultiPolygon, MultiLineString, loads, dumps
+from mundipy.geometry import enrich_geom, Point, MultiPolygon, MultiLineString, MultiPoint, loads, dumps
 import mundipy.geometry as geom
 
 import shapely.geometry
@@ -114,6 +114,12 @@ def test_multilinestring():
 
         assert len(res) == 8
         assert isinstance(res[0], MultiLineString)
+
+def test_multipoint():
+    mp = from_wkt('MULTIPOINT ((10 40), (40 30), (20 20), (30 10)) ')
+    mp = enrich_geom(mp, { 'foo': 'bar' }, pcs='EPSG:4326')
+
+    assert mp['foo'] == 'bar'
 
 def test_loads_dumps():
     with open('tests/fixtures/polygon.geojson', 'r') as f:

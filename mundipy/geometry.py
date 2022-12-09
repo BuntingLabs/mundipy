@@ -330,6 +330,13 @@ class Point(BaseGeometry):
 	def __init__(self, geo: geom.Point, crs: str, features: dict):
 		super().__init__(geo, crs, features)
 
+class MultiPoint(BaseGeometry):
+
+	parent_class = geom.MultiPoint
+
+	def __init__(self, geo: geom.MultiPoint, crs: str, features: dict):
+		super().__init__(geo, crs, features)
+
 class LineString(BaseGeometry):
 
 	parent_class = geom.LineString
@@ -369,6 +376,8 @@ def enrich_geom(geo, features, pcs='EPSG:4326'):
 	"""Enrich a shapely geometry with old features"""
 	if isinstance(geo, geom.Point):
 		return Point(geo, pcs, features)
+	elif isinstance(geo, geom.MultiPoint):
+		return MultiPoint(geo, pcs, features)
 	elif isinstance(geo, geom.LineString):
 		return LineString(geo, pcs, features)
 	elif isinstance(geo, geom.MultiLineString):
