@@ -8,7 +8,7 @@
     "baseUrl": "https://api.buntinglabs.com",
     "authentication": { "type": "apiKey" }
   },
-  "favicon": "/logo/map.svg",
+  "favicon": "/logo/map.png",
   "colors": {
     "primary": "#1B6585",
     "light": "#5498B5",
