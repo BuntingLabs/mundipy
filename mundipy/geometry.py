@@ -337,6 +337,12 @@ class LineString(BaseGeometry):
 	def __init__(self, geo: geom.LineString, crs: str, features: dict):
 		super().__init__(geo, crs, features)
 
+class MultiLineString(BaseGeometry):
+
+	parent_class = geom.MultiLineString
+
+	def __init__(self, geo: geom.MultiLineString, crs: str, features: dict):
+		super().__init__(geo, crs, features)
 
 class Polygon(BaseGeometry):
 
@@ -365,6 +371,8 @@ def enrich_geom(geo, features, pcs='EPSG:4326'):
 		return Point(geo, pcs, features)
 	elif isinstance(geo, geom.LineString):
 		return LineString(geo, pcs, features)
+	elif isinstance(geo, geom.MultiLineString):
+		return MultiLineString(geo, pcs, features)
 	elif isinstance(geo, geom.Polygon):
 		return Polygon(geo, pcs, features)
 	elif isinstance(geo, geom.MultiPolygon):

@@ -2,7 +2,7 @@ import pytest
 import json
 
 from mundipy.dataset import Dataset
-from mundipy.geometry import enrich_geom, Point, MultiPolygon, loads, dumps
+from mundipy.geometry import enrich_geom, Point, MultiPolygon, MultiLineString, loads, dumps
 import mundipy.geometry as geom
 
 import shapely.geometry
@@ -108,6 +108,12 @@ def test_benchmark_fast_bounds(benchmark):
     # very generous bound, unfortunately it's needed
     assert result == pytest.approx(closest_realistic_bounds, 0.1)
 
+def test_multilinestring():
+    with open('tests/fixtures/multilinestring.geojson', 'r') as f:
+        res = loads(json.loads(f.read()))
+
+        assert len(res) == 8
+        assert isinstance(res[0], MultiLineString)
 
 def test_loads_dumps():
     with open('tests/fixtures/polygon.geojson', 'r') as f:
